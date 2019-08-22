@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Prototype of a custom scrollbar</title>
+	
+	<style>
+	
+	/* common 
+	 */
+	 
+	html {
+		box-sizing: border-box;
+		font-family: sans-serif;
+	}
+	*, *:before, *:after {
+		box-sizing: inherit;
+	}
+	
+	code {
+		white-space: pre-wrap;
+		font-family: monospace;
+	}
+	
+	fieldset {
+		display: inline-block;
+		border-width: 0 0 0 1px;
+	}
+	
+	h1 small {
+		color: #999;
+	}
+
+	/* #thing* 
+	 */
+	
+	#thingWrapper {
+		position: relative;
+		overflow: hidden;
+		height: 25vh;
+		width: 80vw;
+		background-color: #ccc;
+		border: 1px solid #ccc;
+	}
+	
+	#thingContentWrapper {
+		position: relative;
+		overflow: hidden;
+		height: calc(100% - 16px);
+		width: calc(100% - 16px);
+		border: 1px solid #ccc;
+		border-width: 0 1px 1px 0;
+	}
+	
+	#thingContent {
+		position: relative;
+		top: 0;
+		min-height: 100%;
+		min-width: 100%;
+	}
+	#thingContent span {
+		display: table-row;
+		height: 20px;
+		font-size: 12px;
+		line-height: 20px;
+		white-space: nowrap;
+		background-color: #eee;
+	}
+	#thingContent span:nth-child(even) {
+		background-color: #f9f9f9;
+	}
+	#thingContent span:first-child {
+		background-color: #666;
+		color: #fff;
+	}
+	#thingContent span:last-child {
+		background-color: #333;
+		color: #fff;
+	}
+	
+	#thingControl {
+		margin-bottom: 1em;
+	}
+	
+	#thingControl div {
+		display: inline-block;
+		margin-bottom: 0.25em;
+	}
+	
+	</style>
+	<link href="./plain-scrollbar.css" rel="stylesheet" type="text/css">
+	<script src="./plain-scrollbar.js" type="application/javascript"></script>
+	<style>
+	/* plain-scrollbar overrides
+	 */
+	 
+	.plain-scrollbar.scrollbar-horizontal {
+	}
+	
+	.plain-scrollbar.scrollbar-vertical {
+	}
+
+	.plain-scrollbar .slider {
+		background-color: rgba(0, 130, 145, 0);
+		
+		/*background-image: url(./favicon.png);
+		background-position: center center;
+		background-repeat: no-repeat;
+		background-size: contain;*/
+		
+		/*border-radius: 8px;*/
+	}
+
+	/*.plain-scrollbar.scrollbar-vertical .slider::before {
+		content: '\2630';
+	}*/
+
+	.plain-scrollbar:hover .slider,
+	.plain-scrollbar[data-visible="true"] .slider {
+		background-color: rgba(0, 130, 145, 0.9);
+	}
+	
+	</style>
+</head>
+<body>
+
+<h1>PlainScrollbar <small>a simple custom scrollbar</small></h1>
+
+<p>PlainScrollbar consists of two HTML elements. That is a container element (e.g. div - the scrollbar area) that contains a child element (e.g. div - the scrollbar slider) and together they form one scrollbar.<br>
+PlainScrollbar instances can be horizontal or vertical and are configured with the following options:
+<code>
+{
+	alwaysVisible: true, //&lt; optional boolean option to let the scrollbar be visible all times or only if in use
+	scrollbarElement: el, //&lt; required option
+	orientation: 'horizontal', //&lt; required option: <b>horizontal</b> or <b>vertical</b>
+	numberOfItems: { //&lt; required option with the properties  <b>start</b>, <b>total</b> and <b>visible</b>
+		<b>start</b>: 0,  //&lt; integer between or equal 0 and numberOfItems.total that represents the <b>start</b> (1st visible) item in the visible area
+		<b>total</b>: 100,  //&lt; integer that represents the <b>total</b> number of items that are available for scrolling
+		<b>visible</b>: 20  //&lt; integer that represents the number of items that fit into the <b>visible</b> area
+	},
+	onUpdate: function(<b>start</b>) {
+		// Do something with <b>start</b> to show the corresponding item as 1st item in the visible area.
+	}
+}
+</code>
+</p>
+
+<hr>
+
+<div id="thingPrototype">
+	<div id="thingControl">
+		<fieldset class="thing-wrapper">
+			<legend>vertical options</legend>
+			<div>
+				<label>total</label>
+				<input id="totalValueInput" type="number" value="">
+			</div>
+			<div>
+				<label>start</label>
+				<input id="startValueInput" type="number" value="">
+			</div>
+			<div>
+				<label>visible</label>
+				<span id="visibleValueInput"></span>
+			</div>
+		</fieldset>	
+	</div>
+
+	<div id="thingWrapper">
+		<div id="thingContentWrapper">
+			<div id="thingContent"></div>
+		</div>
+		<div id="thingScrollbarVertical" class="scrollbar-wrapper" style="height: calc(100% - 17px);"></div>
+		<div id="thingScrollbarHorizontal" class="scrollbar-wrapper" style="width: calc(100% - 17px);"></div>
+	</div>
+</div>
+
+<script>
+
+// https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Global_Objects/String/repeat
+if (!String.prototype.repeat) {
+  String.prototype.repeat = function(count) {
+    'use strict';
+    if (this == null) {
+      throw new TypeError('can\'t convert ' + this + ' to object');
+    }
+    var str = '' + this;
+    count = +count;
+    if (count != count) {
+      count = 0;
+    }
+    if (count < 0) {
+      throw new RangeError('repeat count must be non-negative');
+    }
+    if (count == Infinity) {
+      throw new RangeError('repeat count must be less than infinity');
+    }
+    count = Math.floor(count);
+    if (str.length == 0 || count == 0) {
+      return '';
+    }
+    // Ensuring count is a 31-bit integer allows us to heavily optimize the
+    // main part. But anyway, most current (August 2014) browsers can't handle
+    // strings 1 << 28 chars or longer, so:
+    if (str.length * count >= 1 << 28) {
+      throw new RangeError('repeat count must not overflow maximum string size');
+    }
+    var rpt = '';
+    for (var i = 0; i < count; i++) {
+      rpt += str;
+    }
+    return rpt;
+  }
+}
+
+var elThingWrapper = document.getElementById('thingWrapper'),
+	elThingContentWrapper = document.getElementById('thingContentWrapper'),
+	elContentElement = document.getElementById('thingContent'),
+	elContentItemHeight = 0; //< 20 => TODO: calculate
+
+/*
+ * using & controlling PlainScrollbar
+ */
+
+var totalValueInput = document.getElementById('totalValueInput'),
+	startValueInput = document.getElementById('startValueInput'),
+	visibleValueInput = document.getElementById('visibleValueInput');
+	
+totalValueInput.value = 100;
+startValueInput.value = 0;
+
+function changeNumberOfItems(total) {
+	total = parseInt(total);
+	var items = elContentElement.getElementsByTagName('SPAN'),
+		delta = total - items.length,
+		iStart = items.length,
+		iMax = (items.length + delta);
+		
+	if (delta > 0) {
+		var buffer = elContentElement.innerHTML;
+		for (var i = iStart; i < iMax; i++) {
+			buffer += '<span>' + (i) + ' ' + String('~').repeat(Math.floor(Math.random() * Math.floor(125))) + '</span>';
+		}
+		elContentElement.innerHTML = buffer;
+	}
+	
+	if (delta < 0) {
+		for (var i = (iStart -1); i > (iMax -1); i--) {
+			var child = items[i];
+			//child.remove(); //< Does not exist in IE 11
+			elContentElement.removeChild(child);
+		}
+	}
+	
+	items = elContentElement.getElementsByTagName('SPAN');
+	if (items.length > 0) {
+		var itemBoundingClentRect = items[0].getBoundingClientRect();
+		elContentItemHeight = itemBoundingClentRect.height;
+	} else {
+		elContentItemHeight = 0;
+	}
+}
+
+function determineNumberOfItems(orientation) {
+	var numberOfItems = {};
+	switch(orientation) {
+		case 'horizontal':
+			numberOfItems = {
+				total: elContentElement.scrollWidth,
+				visible: Math.round(elThingContentWrapper.clientWidth),
+				start: 0
+			};
+		break;
+		
+		case 'vertical':
+			numberOfItems = {
+				total: parseInt(totalValueInput.value),
+				visible: elThingContentWrapper.clientHeight / elContentItemHeight, //Math.round(elThingContentWrapper.clientHeight / elContentItemHeight),
+				start: parseInt(startValueInput.value),
+			};
+			visibleValueInput.innerHTML = numberOfItems.visible;
+		break;
+	}
+	return numberOfItems;
+}
+
+changeNumberOfItems(totalValueInput.value);
+
+var elThingScrollbarVertical = document.getElementById('thingScrollbarVertical'),
+	elThingScrollbarHorizontal = document.getElementById('thingScrollbarHorizontal');
+	
+// init horizontal scrollbar
+var horizontalScrollbar = new PlainScrollbar({
+	scrollbarElement: elThingScrollbarHorizontal,
+	orientation: 'horizontal',
+	alwaysVisible: true,
+	numberOfItems: determineNumberOfItems('horizontal'),
+	onUpdate: function(start) {
+// 			console.log("horizontalScrollbar:onUpdate", start);
+		elContentElement.style['left'] = (start  * -1) + 'px';
+	}
+});
+	
+// init vertical scrollbar
+var verticalScrollbar = new PlainScrollbar({
+	scrollbarElement: elThingScrollbarVertical,
+	orientation: 'vertical',
+	alwaysVisible: true,
+	numberOfItems: determineNumberOfItems('vertical'),
+	onUpdate: function(start) {
+		console.log("verticalScrollbar:onUpdate", start, this);
+		elContentElement.style['top'] = (start * -elContentItemHeight) + 'px';
+		startValueInput.value = start;
+	}
+});
+
+elContentElement.addEventListener('wheel', function(event) {
+// 	console.log('elContentElement:wheel', event);	
+	event.preventDefault();
+	// process event 
+	var verticalData = verticalScrollbar.extractDataFromEvent(event),
+		hasVerticalChanges = (parseInt(verticalData.value) !== 0),
+		horizontalData  = horizontalScrollbar.extractDataFromEvent(event),
+		hasHorizontalChanges = (parseInt(horizontalData.value) !== 0);
+	
+	if (hasVerticalChanges) {
+		verticalScrollbar.setSlider(verticalData);
+	}
+	
+	if (hasHorizontalChanges) {
+		horizontalScrollbar.setSlider(horizontalData);
+	}
+}, false);
+
+window.addEventListener('resize', function(event) {
+// 	console.log('window:resize');
+	horizontalScrollbar.setNumberOfItems(determineNumberOfItems('horizontal'));
+	verticalScrollbar.setNumberOfItems(determineNumberOfItems('vertical'), executeCallback = true);
+}, false);
+
+totalValueInput.addEventListener('keypress', function (e) {
+// 	console.log('totalValueInput:keypress', event);
+    var key = e.which || e.keyCode;
+    if (key === 13) { // 13 eq ENTER
+		event.preventDefault();
+		changeNumberOfItems(totalValueInput.value);
+		verticalScrollbar.setNumberOfItems(determineNumberOfItems('vertical'), executeCallback = true);
+    }
+});
+totalValueInput.addEventListener('blur', function(event) {
+// 	console.log('totalValueInput:blur', event);
+	event.preventDefault();
+	changeNumberOfItems(totalValueInput.value);
+	verticalScrollbar.setNumberOfItems(determineNumberOfItems('vertical'), executeCallback = true);
+}, false);
+
+startValueInput.addEventListener('keypress', function (e) {
+// 	console.log('startValueInput:keypress', event);
+    var key = e.which || e.keyCode;
+    if (key === 13) { // 13 eq ENTER
+		event.preventDefault();
+		verticalScrollbar.setNumberOfItems(determineNumberOfItems('vertical'), executeCallback = true);
+    }
+});
+startValueInput.addEventListener('blur', function(event) {
+// 	console.log('startValueInput:blur', event);
+	event.preventDefault();
+	verticalScrollbar.setNumberOfItems(determineNumberOfItems('vertical'), executeCallback = true);
+}, false);
+
+function resetStartValue() {
+	startValueInput.value = 0;
+}
+
+</script>
+
+</body>
+</html>
