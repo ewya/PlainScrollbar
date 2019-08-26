@@ -7,7 +7,6 @@ function PlainScrollbar(options) {
 	/* functions */
 	
 	function log() {
-		//console.log(...arguments); //< ES6 spread operator
 		console.log.apply(null, arguments);
 	}
 	
@@ -18,47 +17,42 @@ function PlainScrollbar(options) {
 		return obj;
 	}
 	
-	this.calculateDataFromStart = function(start, executeCallback) {
-		
+	this.calculateDataFromStart = function(start) {
+
+		start = parseFloat(start);
+
 		var maxStart = this.options.numberOfItems.total - this.options.numberOfItems.visible;
 		
-		start = parseInt(start);
-		
 		if (start > maxStart) {
+			// TODO ?: Warn about inconsistency.
 			start = maxStart;
 		}
 		
 		var data = {
-			executeCallback: executeCallback || false,
 			value: 0,
 			type: '',
 			source: 'start',
-			start: start,
 		};
-		
+
+		// calculate dataValue
 		var scrollbarBoundingClientRect = this.scrollbarElement.getBoundingClientRect(),
 			itemSize = scrollbarBoundingClientRect[this.maxAttribute] / this.options.numberOfItems.total,
-			sliderSize = Math.max(this.options.minSize, this.options.numberOfItems.visible * itemSize),
-			value = (scrollbarBoundingClientRect[this.maxAttribute] - sliderSize) / (this.options.numberOfItems.total - this.options.numberOfItems.visible) * start;
-		
+			sliderSize = Math.max(this.options.minSize, this.options.numberOfItems.visible * itemSize);
+
+		data.value = (scrollbarBoundingClientRect[this.maxAttribute] - sliderSize) / (this.options.numberOfItems.total - this.options.numberOfItems.visible) * start;
+
 		if ('horizontal' === this.options.orientation) {
-			data.value = value;
 			data.type = 'x';
-			return data;
 		}
 		if ('vertical' === this.options.orientation) {
-			data.value = value;
 			data.type = 'y';
-			return data;
 		}
 		
 		return data;
 	};
 
-	this.extractDataFromEvent = function(event, executeCallback) {
-		log('extractDataFromEvent', event);
+	this.extractDataFromEvent = function(event) {
 		var data = {
-			executeCallback: executeCallback || true,
 			value: 0,
 			type: '',
 			source: 'event',
@@ -72,28 +66,24 @@ function PlainScrollbar(options) {
 					offset = scrollbarBoundingClientRect[this.valueAttribute];
 				
 				if ('horizontal' === this.options.orientation) {
-					data.value = event.pageX - offset;
 					data.type = 'x';
-					return data;
+					data.value = event.pageX - offset;
 				}
 				if ('vertical' === this.options.orientation) {
-					data.value = event.pageY - offset;
 					data.type = 'y';
-					return data;
+					data.value = event.pageY - offset;
 				}
 
 			break;
 			
 			case 'wheel':
+				data.type = 'delta';
+
 				if ('horizontal' === this.options.orientation) {
-					data.value = event.deltaX; //event.wheelDeltaX || event.deltaX;
-					data.type = 'delta';
-					return data;
+					data.value = (0 < event.deltaX) ? 1 : -1;
 				}
 				if ('vertical' === this.options.orientation) {
-					data.value = (0 < event.deltaY) ? 1 : -1; //event.wheelDeltaY || event.deltaY; // https://stackoverflow.com/questions/5527601/normalizing-mousewheel-speed-across-browsers
-					data.type = 'delta';
-					return data;
+					data.value = (0 < event.deltaY) ? 1 : -1;
 				}
 
 			break;
@@ -104,38 +94,43 @@ function PlainScrollbar(options) {
 	
 	this.setNumberOfItems = function(numberOfItems, executeCallback) {
 		if (isSliderDrag) {
-			return;
+			executeCallback = false;
 		}
 		
 		// TODO: Validate total, visible, start
-		this.options.numberOfItems = extend(this.options.numberOfItems, numberOfItems)
-		this.setSlider(this.calculateDataFromStart(this.options.numberOfItems.start, executeCallback));
-	}
+		this.options.numberOfItems = extend(this.options.numberOfItems, numberOfItems);
+		this.setSlider(this.calculateDataFromStart(this.options.numberOfItems.start), executeCallback);
+	};
 	
 	this.setSlider = function(data, executeCallback) {
+		// log('setSlider', data, executeCallback);
+		var dataValue = (isNaN(data.value)) ? 0 : parseFloat(data.value);
 
-		var executeCallback = (executeCallback !== false);
-			value = (isNaN(data.value)) ? 0 : parseFloat(data.value),
-			scrollbarBoundingClientRect = this.scrollbarElement.getBoundingClientRect(),
-			sliderBoundingClientRect = this.sliderElement.getBoundingClientRect();
-		log('setSlider', data, executeCallback);
+		executeCallback = (executeCallback !== false);
 
-		/*
-		// skip if unchanged
-		if ('delta' === data.type && 0 === value) {
-			return;
-		}*/
+		// log('setSlider', data, executeCallback);
 		
-		// calculate currentValue, maxValue and newValue
+		// calculate newValue and newStart
+		var scrollbarBoundingClientRect = this.scrollbarElement.getBoundingClientRect(),
+			scrollbarSize = scrollbarBoundingClientRect[this.maxAttribute],
+			sliderBoundingClientRect = this.sliderElement.getBoundingClientRect(),
+			itemSize = scrollbarBoundingClientRect[this.maxAttribute] / this.options.numberOfItems.total,
+			sliderSize = Math.max(this.options.minSize, this.options.numberOfItems.visible * itemSize);
+
 		var currentValue = parseFloat(this.sliderElement.style[this.valueAttribute]),
-			maxValue = scrollbarBoundingClientRect[this.maxAttribute] - sliderBoundingClientRect[this.maxAttribute],
+			maxValue = scrollbarSize - sliderSize,
 			minValue = 0,
 			newValue = currentValue;
-		
-		if ('delta' === data.type) {
-			newValue = currentValue + value;
-		} else if (['x', 'y'].indexOf(data.type) !== -1) {
-			newValue = value - ((isSliderDrag && sliderOffset) ? sliderOffset : 0);
+
+		switch(data.type) {
+			case 'delta':
+				newValue = currentValue + dataValue;
+			break;
+
+			case 'x':
+			case 'y':
+				newValue = dataValue - ((isSliderDrag && sliderOffset) ? sliderOffset : 0);
+			break;
 		}
 	
 		// validate newValue against minValue/maxValue
@@ -145,33 +140,33 @@ function PlainScrollbar(options) {
 		if (newValue > maxValue) {
 			newValue = maxValue;
 		}
-		
-		/*
-		// skip if unchanged
-		if (currentValue == newValue) {
- 			return;
- 		}*/
-		
-		
-		var itemSize = scrollbarBoundingClientRect[this.maxAttribute] / this.options.numberOfItems.total,
-			sliderSize = Math.max(this.options.minSize, this.options.numberOfItems.visible * itemSize),
-			newStart = (this.options.numberOfItems.total - this.options.numberOfItems.visible) / (scrollbarBoundingClientRect[this.maxAttribute] - sliderSize) * newValue;
-		
 
-		this.sliderElement.style[this.valueAttribute] = newValue + 'px';
-		this.sliderElement.style[this.maxAttribute] = sliderSize + 'px';
-		
-		log('setSlider:NEW', {
-			numberOfItems: this.options.numberOfItems,
-			itemSize: itemSize,
-			sliderSize: sliderSize,
-			newStart: newStart,
-		});
+		// calculate newStart
+		/**
+		 *	start / value = (total - visible) / (scrollbarSize - sliderSize)
+		 */
+		var newStart = (this.options.numberOfItems.total - this.options.numberOfItems.visible) / (scrollbarSize - sliderSize) * newValue;
 
-		if (data.executeCallback) {
+		// adjust sliderElement valueAttribute (left or top)
+		if (currentValue !== newValue) {
+			this.sliderElement.style[this.valueAttribute] = newValue + 'px';
+		}
+
+		// adjust sliderElement maxAttribute (height or width)
+		if (sliderBoundingClientRect[this.maxAttribute] !== sliderSize) {
+			this.sliderElement.style[this.maxAttribute] = sliderSize + 'px';
+		}
+		
+		// log('setSlider:calculated', {
+		// 	numberOfItems: this.options.numberOfItems,
+		// 	itemSize: itemSize,
+		// 	sliderSize: sliderSize,
+		// 	newStart: newStart,
+		// });
+
+		if (executeCallback) {
 			// execute onUpdate callback and provide newStart
 			if ('function' === typeof this.options.onUpdate) {
-				//this.options.onUpdate(newStart); //< scope of this is the options object
 				// scope of 'this' is set to the PlainScrollbar instance
 				this.onUpdate = this.options.onUpdate;
 				this.onUpdate(newStart);

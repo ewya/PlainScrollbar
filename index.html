@@ -134,9 +134,9 @@ PlainScrollbar instances can be horizontal or vertical and are configured with t
 	scrollbarElement: el, //&lt; required option
 	orientation: 'horizontal', //&lt; required option: <b>horizontal</b> or <b>vertical</b>
 	numberOfItems: { //&lt; required option with the properties  <b>start</b>, <b>total</b> and <b>visible</b>
-		<b>start</b>: 0,  //&lt; integer between or equal 0 and numberOfItems.total that represents the <b>start</b> (1st visible) item in the visible area
-		<b>total</b>: 100,  //&lt; integer that represents the <b>total</b> number of items that are available for scrolling
-		<b>visible</b>: 20  //&lt; integer that represents the number of items that fit into the <b>visible</b> area
+		<b>start</b>: 0,  //&lt; number between or equal 0 and numberOfItems.total that represents the <b>start</b> (1st visible) item in the visible area
+		<b>total</b>: 100,  //&lt; number that represents the <b>total</b> number of items that are available for scrolling
+		<b>visible</b>: 20  //&lt; number that represents the number of items that fit into the <b>visible</b> area
 	},
 	onUpdate: function(<b>start</b>) {
 		// Do something with <b>start</b> to show the corresponding item as 1st item in the visible area.
@@ -216,7 +216,7 @@ if (!String.prototype.repeat) {
 var elThingWrapper = document.getElementById('thingWrapper'),
 	elThingContentWrapper = document.getElementById('thingContentWrapper'),
 	elContentElement = document.getElementById('thingContent'),
-	elContentItemHeight = 0; //< 20 => TODO: calculate
+	elContentItemHeight = 0;
 
 /*
  * using & controlling PlainScrollbar
@@ -275,7 +275,7 @@ function determineNumberOfItems(orientation) {
 		case 'vertical':
 			numberOfItems = {
 				total: parseInt(totalValueInput.value),
-				visible: elThingContentWrapper.clientHeight / elContentItemHeight, //Math.round(elThingContentWrapper.clientHeight / elContentItemHeight),
+				visible: elThingContentWrapper.clientHeight / elContentItemHeight,
 				start: parseInt(startValueInput.value),
 			};
 			visibleValueInput.innerHTML = numberOfItems.visible;
@@ -296,7 +296,7 @@ var horizontalScrollbar = new PlainScrollbar({
 	alwaysVisible: true,
 	numberOfItems: determineNumberOfItems('horizontal'),
 	onUpdate: function(start) {
-// 			console.log("horizontalScrollbar:onUpdate", start);
+// 			console.log("horizontalScrollbar:onUpdate", start, this);
 		elContentElement.style['left'] = (start  * -1) + 'px';
 	}
 });
@@ -308,7 +308,7 @@ var verticalScrollbar = new PlainScrollbar({
 	alwaysVisible: true,
 	numberOfItems: determineNumberOfItems('vertical'),
 	onUpdate: function(start) {
-		console.log("verticalScrollbar:onUpdate", start, this);
+		// console.log("verticalScrollbar:onUpdate", start, this);
 		elContentElement.style['top'] = (start * -elContentItemHeight) + 'px';
 		startValueInput.value = start;
 	}
@@ -367,10 +367,6 @@ startValueInput.addEventListener('blur', function(event) {
 	event.preventDefault();
 	verticalScrollbar.setNumberOfItems(determineNumberOfItems('vertical'), executeCallback = true);
 }, false);
-
-function resetStartValue() {
-	startValueInput.value = 0;
-}
 
 </script>
 
