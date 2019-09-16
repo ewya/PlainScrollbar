@@ -4,28 +4,8 @@
  * @constructor
  */
 function PlainScrollbar(options) {
-	
-	/** common functions */
 
-	/**
-	 * Simple console logging.
-	 */
-	function log() {
-		console.log.apply(null, arguments);
-	}
-
-	/**
-	 * Simple object extend function that is used to merge the PlainScrollbar custom options with the default options.
-	 * @param obj
-	 * @param src
-	 * @returns {*}
-	 */
-	function extend(obj, src) {
-		Object.keys(src).forEach(function(key) {
-			obj[key] = src[key];
-		});
-		return obj;
-	}
+	/** Public functions */
 
 	/**
 	 * Calculates a data object by an event the can be used for calling setSlider.
@@ -36,7 +16,7 @@ function PlainScrollbar(options) {
 
 		start = parseFloat(start);
 
-		var maxStart = this.options.numberOfItems.total - this.options.numberOfItems.visible,
+		var maxStart = config.numberOfItems.total - config.numberOfItems.visible,
 			minStart = 0;
 
 		if (start < minStart) {
@@ -54,10 +34,10 @@ function PlainScrollbar(options) {
 			source: 'start',
 		};
 
-		var sliderAreaBoundingClientRect = this.sliderAreaElement.getBoundingClientRect(),
-			sliderAreaSize = sliderAreaBoundingClientRect[this.maxAttribute],
-			itemSize = sliderAreaSize / this.options.numberOfItems.total,
-			sliderSize = Math.max(this.options.sliderMinSize, this.options.numberOfItems.visible * itemSize);
+		var sliderAreaBoundingClientRect = sliderAreaElement.getBoundingClientRect(),
+			sliderAreaSize = sliderAreaBoundingClientRect[maxAttribute],
+			itemSize = sliderAreaSize / config.numberOfItems.total,
+			sliderSize = Math.max(config.sliderMinSize, config.numberOfItems.visible * itemSize);
 
 		/**
 		 *	start / value = (total - visible) / (sliderAreaSize - sliderSize)
@@ -65,12 +45,12 @@ function PlainScrollbar(options) {
 
 		var maxValue = sliderAreaSize - sliderSize;
 
-		data.value = maxValue / (this.options.numberOfItems.total - this.options.numberOfItems.visible) * start;
+		data.value = maxValue / (config.numberOfItems.total - config.numberOfItems.visible) * start;
 
-		if ('horizontal' === this.options.orientation) {
+		if ('horizontal' === config.orientation) {
 			data.type = 'x';
 		}
-		if ('vertical' === this.options.orientation) {
+		if ('vertical' === config.orientation) {
 			data.type = 'y';
 		}
 
@@ -93,14 +73,14 @@ function PlainScrollbar(options) {
 			case 'mousedown':
 			case 'mousemove':
 			case 'mouseup':
-				var sliderAreaBoundingClientRect = this.sliderAreaElement.getBoundingClientRect(),
-					sliderAreaOffset = sliderAreaBoundingClientRect[this.valueAttribute];
+				var sliderAreaBoundingClientRect = sliderAreaElement.getBoundingClientRect(),
+					sliderAreaOffset = sliderAreaBoundingClientRect[valueAttribute];
 
-				if ('horizontal' === this.options.orientation) {
+				if ('horizontal' === config.orientation) {
 					data.type = 'x';
 					data.value = event.pageX - sliderAreaOffset;
 				}
-				if ('vertical' === this.options.orientation) {
+				if ('vertical' === config.orientation) {
 					data.type = 'y';
 					data.value = event.pageY - sliderAreaOffset;
 				}
@@ -110,14 +90,14 @@ function PlainScrollbar(options) {
 			case 'wheel':
 				data.type = 'delta';
 
-				if ('horizontal' === this.options.orientation) {
+				if ('horizontal' === config.orientation) {
 					data.value = (0 < event.deltaX) ? 1 : -1;
 				}
-				if ('vertical' === this.options.orientation) {
+				if ('vertical' === config.orientation) {
 					data.value = (0 < event.deltaY) ? 1 : -1;
 				}
 
-				data.value *= this.options.wheelSpeed;
+				data.value *= config.wheelSpeed;
 
 			break;
 		}
@@ -132,8 +112,8 @@ function PlainScrollbar(options) {
 	 */
 	this.setNumberOfItems = function(numberOfItems, preventCallbackExecution) {
 		// TODO: Validate total, visible, start
-		this.options.numberOfItems = extend(this.options.numberOfItems, numberOfItems);
-		this.setSlider(this.calculateDataFromStart(this.options.numberOfItems.start), preventCallbackExecution);
+		config.numberOfItems = extend(config.numberOfItems, numberOfItems);
+		this.setSlider(this.calculateDataFromStart(config.numberOfItems.start), preventCallbackExecution);
 	};
 
 	/**
@@ -150,13 +130,13 @@ function PlainScrollbar(options) {
 
 		/** calculate newValue and newStart */
 
-		var sliderAreaBoundingClientRect = this.sliderAreaElement.getBoundingClientRect(),
-			sliderAreaSize = sliderAreaBoundingClientRect[this.maxAttribute],
-			sliderBoundingClientRect = this.sliderElement.getBoundingClientRect(),
-			itemSize = sliderAreaSize / this.options.numberOfItems.total,
-			sliderSize = Math.max(this.options.sliderMinSize, this.options.numberOfItems.visible * itemSize);
+		var sliderAreaBoundingClientRect = sliderAreaElement.getBoundingClientRect(),
+			sliderAreaSize = sliderAreaBoundingClientRect[maxAttribute],
+			sliderBoundingClientRect = sliderElement.getBoundingClientRect(),
+			itemSize = sliderAreaSize / config.numberOfItems.total,
+			sliderSize = Math.max(config.sliderMinSize, config.numberOfItems.visible * itemSize);
 
-		var currentValue = parseFloat(this.sliderElement.style[this.valueAttribute]),
+		var currentValue = parseFloat(sliderElement.style[valueAttribute]),
 			maxValue = sliderAreaSize - sliderSize,
 			minValue = 0,
 			newValue = currentValue;
@@ -183,22 +163,22 @@ function PlainScrollbar(options) {
 		 *	start / value = (total - visible) / (sliderAreaSize - sliderSize)
 		 */
 
-		var newStart = (this.options.numberOfItems.total - this.options.numberOfItems.visible) / maxValue * newValue;
+		var newStart = (config.numberOfItems.total - config.numberOfItems.visible) / maxValue * newValue;
 
-		this.options.numberOfItems.start = newStart;
+		config.numberOfItems.start = newStart;
 
 		// adjust sliderElement valueAttribute (left or top)
 		if (currentValue !== newValue) {
-			this.sliderElement.style[this.valueAttribute] = newValue + 'px';
+			sliderElement.style[valueAttribute] = newValue + 'px';
 		}
 
 		// adjust sliderElement maxAttribute (height or width)
-		if (sliderBoundingClientRect[this.maxAttribute] !== sliderSize) {
-			this.sliderElement.style[this.maxAttribute] = sliderSize + 'px';
+		if (sliderBoundingClientRect[maxAttribute] !== sliderSize) {
+			sliderElement.style[maxAttribute] = sliderSize + 'px';
 		}
 
 		// log('setSlider:calculated', {
-		// 	numberOfItems: this.options.numberOfItems,
+		// 	numberOfItems: config.numberOfItems,
 		// 	itemSize: itemSize,
 		// 	sliderSize: sliderSize,
 		// 	newStart: newStart,
@@ -206,13 +186,35 @@ function PlainScrollbar(options) {
 
 		if (executeCallback) {
 			// execute onUpdate callback and provide newStart
-			if ('function' === typeof this.options.onUpdate) {
+			if ('function' === typeof config.onUpdate) {
 				// scope of 'this' is set to the PlainScrollbar instance
-				this.onUpdate = this.options.onUpdate;
+				this.onUpdate = config.onUpdate;
 				this.onUpdate(newStart);
 			}
 		}
 	};
+
+	/** Private functions */
+
+	/**
+	 * Simple console logging.
+	 */
+	function log() {
+		console.log.apply(null, arguments);
+	}
+
+	/**
+	 * Simple object extend function that is used to merge the PlainScrollbar custom options with the default options.
+	 * @param obj
+	 * @param src
+	 * @returns {*}
+	 */
+	function extend(obj, src) {
+		Object.keys(src).forEach(function(key) {
+			obj[key] = src[key];
+		});
+		return obj;
+	}
 
 	/** scrollbarElement event listener */
 
@@ -222,7 +224,7 @@ function PlainScrollbar(options) {
 	 */
 	function scrollbarMouseEnter(event) {
 		event.preventDefault();
-		self.scrollbarElement.setAttribute('data-visible', true);
+		config.scrollbarElement.setAttribute('data-visible', true);
 	}
 
 	/**
@@ -231,8 +233,8 @@ function PlainScrollbar(options) {
 	 */
 	function scrollbarMouseLeave(event) {
 		event.preventDefault();
-		if (!isSliderDrag && !self.options.alwaysVisible) {
-			self.scrollbarElement.setAttribute('data-visible', false);
+		if (!isSliderDrag && !config.alwaysVisible) {
+			config.scrollbarElement.setAttribute('data-visible', false);
 		}
 	}
 
@@ -248,13 +250,13 @@ function PlainScrollbar(options) {
 		}
 
 		event.preventDefault();
-		if (self.options.movePageByPageOnAreaClick) {
-			var start = self.options.numberOfItems.start,
-				visible = self.options.numberOfItems.visible,
-				currentValue = parseFloat(self.sliderElement.style[self.valueAttribute]),
+		if (config.movePageByPageOnAreaClick) {
+			var start = config.numberOfItems.start,
+				visible = config.numberOfItems.visible,
+				currentValue = parseFloat(sliderElement.style[valueAttribute]),
 				value = currentValue;
 
-			switch(self.options.orientation) {
+			switch(config.orientation) {
 				case 'horizontal':
 					value = event.offsetX;
 					break;
@@ -312,7 +314,7 @@ function PlainScrollbar(options) {
 	 */
 	function arrowClickBackward(event) {
 		event.preventDefault();
-		var start = self.options.numberOfItems.start -1;
+		var start = config.numberOfItems.start -1;
 		self.setSlider(self.calculateDataFromStart(start));
 	}
 
@@ -322,7 +324,7 @@ function PlainScrollbar(options) {
 	 */
 	function arrowClickForward(event) {
 		event.preventDefault();
-		var start = self.options.numberOfItems.start +1;
+		var start = config.numberOfItems.start +1;
 		self.setSlider(self.calculateDataFromStart(start));
 	}
 
@@ -337,10 +339,10 @@ function PlainScrollbar(options) {
 		clearTimeout(eventTimeout);
 		isSliderDrag = true;
 		sliderOffset = 0;
-		if ('horizontal' === self.options.orientation) {
+		if ('horizontal' === config.orientation) {
 			sliderOffset = event.offsetX;
 		}
-		if ('vertical' === self.options.orientation) {
+		if ('vertical' === config.orientation) {
 			sliderOffset = event.offsetY;
 		}
 	}
@@ -374,8 +376,8 @@ function PlainScrollbar(options) {
 
 		event.preventDefault();
 		clearTimeout(eventTimeout);
-		if (!self.options.alwaysVisible) {
-			self.scrollbarElement.setAttribute('data-visible', false);
+		if (!config.alwaysVisible) {
+			config.scrollbarElement.setAttribute('data-visible', false);
 		}
 		self.setSlider(self.extractDataFromEvent(event));
 		isSliderDrag = false;
@@ -388,6 +390,11 @@ function PlainScrollbar(options) {
 	log('PlainScrollbar:constructor:arguments', arguments);
 
 	var defaultOptions = {
+			/**
+			 * Configure that the scrollbar is always visible.
+			 * An arrow click will move the slider by one item backward or forward.
+			 */
+			alwaysVisible: false,
 			/**
 			 * Configure that the scrollbar has arrows on each end.
 			 * An arrow click will move the slider by one item backward or forward.
@@ -434,46 +441,44 @@ function PlainScrollbar(options) {
 		throw 'Missing valid option.orientation!';
 	}
 
-	this.options = extend(defaultOptions, options);
-	log('PlainScrollbar:init:options', this.options);
+	var config = extend(defaultOptions, options);
+	log('PlainScrollbar:init:options', config);
 
-	this.cssClasses = [
-		'plain-scrollbar',
-		'scrollbar-' + this.options.orientation,
-	];
-		
-	this.maxAttribute = null;
-	this.valueAttribute = null;
+	var cssClasses = [
+			'plain-scrollbar',
+			'scrollbar-' + config.orientation,
+		],
+		maxAttribute = null,
+		valueAttribute = null;
 	
-	if ('horizontal' === this.options.orientation) {
-		this.maxAttribute = 'width';
-		this.valueAttribute = 'left';
+	if ('horizontal' === config.orientation) {
+		maxAttribute = 'width';
+		valueAttribute = 'left';
 	}
-	if ('vertical' === this.options.orientation) {
-		this.maxAttribute = 'height';
-		this.valueAttribute = 'top';
+	if ('vertical' === config.orientation) {
+		maxAttribute = 'height';
+		valueAttribute = 'top';
 	}
 
 	// determine scrollbarElement
-	this.scrollbarElement = this.options.scrollbarElement;
-	this.scrollbarElement.setAttribute('data-visible', (this.options.alwaysVisible === true));
-	for (var i = 0; i < this.cssClasses.length; i++) {
-		this.scrollbarElement.classList.add(this.cssClasses[i]);
+	config.scrollbarElement.setAttribute('data-visible', (config.alwaysVisible === true));
+	for (var i = 0; i < cssClasses.length; i++) {
+		config.scrollbarElement.classList.add(cssClasses[i]);
 	}
 
 	// determine arrowElements and create them if configured.
-	this.arrowElements = {};
-	if (this.options.arrows) {
-		this.scrollbarElement.classList.add('has-arrows');
+	var arrowElements = {};
+	if (config.arrows) {
+		config.scrollbarElement.classList.add('has-arrows');
 		// create arrow elements
-		this.arrowElements = {
+		arrowElements = {
 			'backward': document.createElement('div'),
 			'forward': document.createElement('div'),
 		};
 	}
 
-	for(var m in this.arrowElements) {
-		if (!this.arrowElements.hasOwnProperty(m)) {
+	for(var m in arrowElements) {
+		if (!arrowElements.hasOwnProperty(m)) {
 			continue;
 		}
 
@@ -482,20 +487,20 @@ function PlainScrollbar(options) {
 
 		switch(m) {
 			case 'backward':
-				if ('horizontal' === this.options.orientation) {
+				if ('horizontal' === config.orientation) {
 					cssClass += 'left';
 				}
-				if ('vertical' === this.options.orientation) {
+				if ('vertical' === config.orientation) {
 					cssClass += 'up';
 				}
 				listener = arrowClickBackward;
 				break;
 
 			case 'forward':
-				if ('horizontal' === this.options.orientation) {
+				if ('horizontal' === config.orientation) {
 					cssClass += 'right';
 				}
-				if ('vertical' === this.options.orientation) {
+				if ('vertical' === config.orientation) {
 					cssClass += 'down';
 				}
 				listener = arrowClickForward;
@@ -506,35 +511,35 @@ function PlainScrollbar(options) {
 				break;
 		}
 
-		this.arrowElements[m].classList.add(cssClass);
-		this.arrowElements[m].append(document.createElement('span'));
-		this.arrowElements[m].addEventListener('mousedown', listener, false);
+		arrowElements[m].classList.add(cssClass);
+		arrowElements[m].append(document.createElement('span'));
+		arrowElements[m].addEventListener('mousedown', listener, false);
 		// append arrow element
-		this.scrollbarElement.appendChild(this.arrowElements[m]);
+		config.scrollbarElement.appendChild(arrowElements[m]);
 	}
 
 	// create sliderElement
-	this.sliderElement = document.createElement('div');
-	this.sliderElement.classList.add('slider');
-	this.sliderElement.style[this.valueAttribute] = '0';
-	this.sliderElement.style[this.maxAttribute] = '0';
-	this.sliderElement.addEventListener('mousedown', sliderMouseDown, false);
+	var sliderElement = document.createElement('div');
+	sliderElement.classList.add('slider');
+	sliderElement.style[valueAttribute] = '0';
+	sliderElement.style[maxAttribute] = '0';
+	sliderElement.addEventListener('mousedown', sliderMouseDown, false);
 
 	// create sliderAreaElement and append sliderElement
-	this.sliderAreaElement = document.createElement('div');
-	this.sliderAreaElement.classList.add('slider-area');
-	this.sliderAreaElement.appendChild(this.sliderElement);
-	this.sliderAreaElement.addEventListener('mousedown', sliderAreaMouseDown, false);
-	this.sliderAreaElement.addEventListener('mouseup', sliderAreaMouseUp, false);
-	this.sliderAreaElement.addEventListener('wheel', sliderAreaWheel, false);
+	var sliderAreaElement = document.createElement('div');
+	sliderAreaElement.classList.add('slider-area');
+	sliderAreaElement.appendChild(sliderElement);
+	sliderAreaElement.addEventListener('mousedown', sliderAreaMouseDown, false);
+	sliderAreaElement.addEventListener('mouseup', sliderAreaMouseUp, false);
+	sliderAreaElement.addEventListener('wheel', sliderAreaWheel, false);
 	
-	this.scrollbarElement.appendChild(this.sliderAreaElement);
-	this.scrollbarElement.addEventListener('mouseenter', scrollbarMouseEnter, false);
-	this.scrollbarElement.addEventListener('mouseleave', scrollbarMouseLeave, false);
-	
-	this.setSlider(this.calculateDataFromStart(this.options.numberOfItems.start));
+	config.scrollbarElement.appendChild(sliderAreaElement);
+	config.scrollbarElement.addEventListener('mouseenter', scrollbarMouseEnter, false);
+	config.scrollbarElement.addEventListener('mouseleave', scrollbarMouseLeave, false);
 
-	var scrollbarElementWindow = this.scrollbarElement.ownerDocument.defaultView;
+	var scrollbarElementWindow = config.scrollbarElement.ownerDocument.defaultView;
 	scrollbarElementWindow.addEventListener('mousemove', windowMouseMove, false);
 	scrollbarElementWindow.addEventListener('mouseup', windowMouseUp, false);
+
+	this.setSlider(this.calculateDataFromStart(config.numberOfItems.start));
 }
