@@ -286,10 +286,10 @@ contentElement.addEventListener('wheel', function(event) {
 // 	console.log('contentElement:wheel', event);
 	event.preventDefault();
 	// process event 
-	var verticalData = verticalScrollbar.extractDataFromEvent(event),
-		hasVerticalChanges = (parseInt(verticalData.value) !== 0),
-		horizontalData  = horizontalScrollbar.extractDataFromEvent(event),
-		hasHorizontalChanges = (parseInt(horizontalData.value) !== 0);
+	var verticalData = verticalScrollbar.calculateDataFromEvent(event),
+		hasVerticalChanges = (Math.floor(verticalData.value) !== 0),
+		horizontalData  = horizontalScrollbar.calculateDataFromEvent(event),
+		hasHorizontalChanges = (Math.floor(horizontalData.value) !== 0);
 	
 	if (hasVerticalChanges) {
 		verticalScrollbar.setSlider(verticalData);
