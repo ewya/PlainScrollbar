@@ -29,9 +29,9 @@ function PlainScrollbar(customConfiguration) {
 		}
 
 		var data = {
-			value: 0,
-			type: '',
 			source: 'start',
+			type: '',
+			value: 0,
 		};
 
 		var sliderAreaBoundingClientRect = sliderAreaElement.getBoundingClientRect(),
@@ -64,9 +64,9 @@ function PlainScrollbar(customConfiguration) {
 	 */
 	this.calculateDataFromEvent = function(event) {
 		var data = {
-			value: 0,
-			type: '',
 			source: 'event',
+			type: '',
+			value: 0,
 		};
 
 		switch(event.type) {
@@ -84,7 +84,6 @@ function PlainScrollbar(customConfiguration) {
 					data.type = 'y';
 					data.value = event.pageY - sliderAreaOffset;
 				}
-
 			break;
 
 			case 'wheel':
@@ -98,11 +97,11 @@ function PlainScrollbar(customConfiguration) {
 				}
 
 				data.value *= configuration.wheelSpeed;
-
 			break;
 
 			default:
-				data.source = null;
+				data.source = '';
+			break;
 		}
 
 		return data;
@@ -125,6 +124,28 @@ function PlainScrollbar(customConfiguration) {
 	 * @param preventCallbackExecution
 	 */
 	this.setSlider = function(data, preventCallbackExecution) {
+		// Validate data
+		var isValid = true,
+			requiredDataProperties = {
+				'source': ['event', 'start'],
+				'type': ['delta', 'x', 'y'],
+				'value': 'int'
+		};
+
+		for(var p in requiredDataProperties) {
+			if (!data.hasOwnProperty(p)) {
+				isValid = false;
+				break;
+			}
+			// TODO: types ;-)
+		}
+
+		if (!isValid) {
+			throw 'Parameter "data" is invalid!';
+		}
+
+		// Proceed setting slider value...
+
 		// log('setSlider', data, executeCallback);
 		var dataValue = (isNaN(data.value)) ? 0 : parseFloat(data.value),
 			executeCallback = (preventCallbackExecution !== true);
@@ -436,11 +457,11 @@ function PlainScrollbar(customConfiguration) {
 	}
 	if (!customConfiguration.hasOwnProperty('scrollbarElement')
 	|| customConfiguration.scrollbarElement.hasOwnProperty('nodeName') ) {
-		throw 'Missing valid option.scrollbarElement!';
+		throw 'Missing valid configuration.scrollbarElement!';
 	}
 	if (!customConfiguration.hasOwnProperty('orientation')
 	|| ['horizontal', 'vertical'].indexOf(customConfiguration.orientation) === -1) {
-		throw 'Missing valid option.orientation!';
+		throw 'Missing valid configuration.orientation!';
 	}
 
 	var configuration = extend(defaultConfiguration, customConfiguration);
