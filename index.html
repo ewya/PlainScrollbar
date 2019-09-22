@@ -221,8 +221,8 @@ function changeNumberOfItems(total) {
 	
 	items = contentElement.getElementsByTagName('SPAN');
 	if (items.length > 0) {
-		var itemBoundingClentRect = items[0].getBoundingClientRect();
-		itemSizeVertical = itemBoundingClentRect.height;
+		var itemBoundingClientRect = items[0].getBoundingClientRect();
+		itemSizeVertical = itemBoundingClientRect.height;
 	} else {
 		itemSizeVertical = 0;
 	}
@@ -255,55 +255,40 @@ changeNumberOfItems(totalValueInputElement.value);
 
 // init horizontal scrollbar
 var horizontalScrollbar = new PlainScrollbar({
-	scrollbarElement: document.getElementById('thingScrollbarHorizontal'),
-	orientation: 'horizontal',
-	alwaysVisible: false,
+	// alwaysVisible: true,
 	// arrows: true,
 	movePageByPageOnAreaClick: false,
 	numberOfItems: determineNumberOfItems('horizontal'),
+	orientation: 'horizontal',
+	onSet: function(numberOfItems) {
+		contentElement.style['left'] = (numberOfItems.start  * -1) + 'px';
+	},
+	scrollbarElement: document.getElementById('thingScrollbarHorizontal'),
 	wheelSpeed: 8,
-	onUpdate: function(start) {
-// 			console.log("horizontalScrollbar:onUpdate", start, this);
-		contentElement.style['left'] = (start  * -1) + 'px';
-	}
 });
 	
 // init vertical scrollbar
 var verticalScrollbar = new PlainScrollbar({
-	scrollbarElement: document.getElementById('thingScrollbarVertical'),
-	orientation: 'vertical',
-	arrows: true,
 	alwaysVisible: true,
+	arrows: true,
 	numberOfItems: determineNumberOfItems('vertical'),
-	onUpdate: function(start) {
-		// console.log("verticalScrollbar:onUpdate", start, this);
-		contentElement.style['top'] = (start * -itemSizeVertical) + 'px';
-		startValueInputElement.value = start;
-	}
+	orientation: 'vertical',
+	onSet: function(numberOfItems) {
+		contentElement.style['top'] = (numberOfItems.start * -itemSizeVertical) + 'px';
+		startValueInputElement.value = numberOfItems.start;
+	},
+	scrollbarElement: document.getElementById('thingScrollbarVertical'),
 });
 
 contentElement.addEventListener('wheel', function(event) {
-// 	console.log('contentElement:wheel', event);
 	event.preventDefault();
-	// process event 
-	var verticalData = verticalScrollbar.calculateDataFromEvent(event),
-		hasVerticalChanges = (Math.floor(verticalData.value) !== 0),
-		horizontalData  = horizontalScrollbar.calculateDataFromEvent(event),
-		hasHorizontalChanges = (Math.floor(horizontalData.value) !== 0);
-	
-	if (hasVerticalChanges) {
-		verticalScrollbar.setSlider(verticalData);
-	}
-	
-	if (hasHorizontalChanges) {
-		horizontalScrollbar.setSlider(horizontalData);
-	}
+	verticalScrollbar.set(event);
+	horizontalScrollbar.set(event);
 }, false);
 
 window.addEventListener('resize', function(event) {
-// 	console.log('window:resize');
-	horizontalScrollbar.setNumberOfItems(determineNumberOfItems('horizontal'));
-	verticalScrollbar.setNumberOfItems(determineNumberOfItems('vertical'));
+	horizontalScrollbar.set(determineNumberOfItems('horizontal'));
+	verticalScrollbar.set(determineNumberOfItems('vertical'));
 }, false);
 
 totalValueInputElement.addEventListener('keypress', function (event) {
@@ -312,14 +297,14 @@ totalValueInputElement.addEventListener('keypress', function (event) {
     if (key === 13) { // 13 eq ENTER
 		event.preventDefault();
 		changeNumberOfItems(totalValueInputElement.value);
-		verticalScrollbar.setNumberOfItems(determineNumberOfItems('vertical'));
+		verticalScrollbar.set(determineNumberOfItems('vertical'));
     }
 });
 totalValueInputElement.addEventListener('blur', function(event) {
 // 	console.log('totalValueInputElement:blur', event);
 	event.preventDefault();
 	changeNumberOfItems(totalValueInputElement.value);
-	verticalScrollbar.setNumberOfItems(determineNumberOfItems('vertical'));
+	verticalScrollbar.set(determineNumberOfItems('vertical'));
 }, false);
 
 startValueInputElement.addEventListener('keypress', function (event) {
@@ -327,13 +312,13 @@ startValueInputElement.addEventListener('keypress', function (event) {
     var key = event.which || event.keyCode;
     if (key === 13) { // 13 eq ENTER
 		event.preventDefault();
-		verticalScrollbar.setNumberOfItems(determineNumberOfItems('vertical'));
+		verticalScrollbar.set(determineNumberOfItems('vertical'));
     }
 });
 startValueInputElement.addEventListener('blur', function(event) {
 // 	console.log('startValueInputElement:blur', event);
 	event.preventDefault();
-	verticalScrollbar.setNumberOfItems(determineNumberOfItems('vertical'));
+	verticalScrollbar.set(determineNumberOfItems('vertical'));
 }, false);
 
 </script>
