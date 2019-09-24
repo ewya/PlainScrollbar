@@ -93,6 +93,10 @@
 		border-radius: 8px;
 	}
 
+	.plain-scrollbar[data-scrollable="false"] {
+		visibility: hidden;
+	}
+
 	.plain-scrollbar .slider {
 		background-color: rgba(0, 130, 145, 0);
 	}
@@ -282,8 +286,10 @@ var verticalScrollbar = new PlainScrollbar({
 
 contentElement.addEventListener('wheel', function(event) {
 	event.preventDefault();
-	verticalScrollbar.set(event);
-	horizontalScrollbar.set(event);
+	if (verticalScrollbar.isEnabled())
+		verticalScrollbar.set(event);
+	if (horizontalScrollbar.isEnabled())
+		horizontalScrollbar.set(event);
 }, false);
 
 window.addEventListener('resize', function(event) {

@@ -23,6 +23,13 @@
 	right: 0;
 	width: 16px;
 }
+
+.plain-scrollbar[data-enabled="false"] {
+	opacity: 0.25;
+}
+.plain-scrollbar[data-scrollable="false"] {
+	/*visibility: hidden;*/
+}
 .plain-scrollbar[data-visible="true"] {
 	background-color: rgba(251, 251, 251, 0.5);
 }
