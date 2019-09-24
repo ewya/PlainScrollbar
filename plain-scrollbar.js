@@ -9,7 +9,7 @@ function PlainScrollbar(customConfiguration) {
 
 	/**
 	 * Set the enabled state.
-	 * @param enabled
+	 * @param enabled {boolean} Will be evaluated as boolean.
 	 */
 	this.enabled = function(enabled) {
 		configuration.scrollbarElement.setAttribute('data-enabled', enabled);
@@ -286,7 +286,7 @@ function PlainScrollbar(customConfiguration) {
 	/** scrollbarElement event listener */
 
 	/**
-	 * Handle scrollbar mouseenter event.
+	 * Handle scrollbar mouseenter event if scrollbar is enabled.
 	 * @param event
 	 */
 	function scrollbarMouseEnter(event) {
@@ -299,7 +299,7 @@ function PlainScrollbar(customConfiguration) {
 	}
 
 	/**
-	 * Handle scrollbar mouseleave event.
+	 * Handle scrollbar mouseleave event if scrollbar is enabled.
 	 * @param event
 	 */
 	function scrollbarMouseLeave(event) {
@@ -316,14 +316,11 @@ function PlainScrollbar(customConfiguration) {
 	/** sliderAreaElement event listener */
 
 	/**
-	 * Handle slider area mousedown event if it's not a slider drag operation.
+	 * Handle slider area mousedown event if scrollbar is enabled and it's not a slider drag operation.
 	 * @param event
 	 */
 	function sliderAreaMouseDown(event) {
-		if (!isEnabled) {
-			return;
-		}
-		if (isSliderDrag) {
+		if (!isEnabled || isSliderDrag) {
 			return;
 		}
 
@@ -418,14 +415,11 @@ function PlainScrollbar(customConfiguration) {
 	/** window event listener */
 
 	/**
-	 * Handle window mousemove event if it's a slider drag operation.
+	 * Handle window mousemove event if scrollbar is enabled and it's a slider drag operation.
 	 * @param event
 	 */
 	function windowMouseMove(event) {
-		if (!isEnabled) {
-			return;
-		}
-		if (!isSliderDrag) {
+		if (!isEnabled || !isSliderDrag) {
 			return;
 		}
 
@@ -459,7 +453,7 @@ function PlainScrollbar(customConfiguration) {
 	/** arrowElement event listener */
 
 	/**
-	 * Handle arrow (backward) click event.
+	 * Handle arrow (backward) click event if scrollbar is enabled.
 	 * @param event
 	 */
 	function arrowClickBackward(event) {
@@ -473,7 +467,7 @@ function PlainScrollbar(customConfiguration) {
 	}
 
 	/**
-	 * Handle arrow (forward) click event.
+	 * Handle arrow (forward) click event if scrollbar is enabled.
 	 * @param event
 	 */
 	function arrowClickForward(event) {
@@ -494,7 +488,7 @@ function PlainScrollbar(customConfiguration) {
 			/**
 			 * Configure that the scrollbar is always visible.
 			 */
-			alwaysVisible: false, //< TODO: More possibilities.
+			alwaysVisible: false,
 
 			/**
 			 * Configure that the scrollbar has arrows on each end.
