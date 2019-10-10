@@ -513,7 +513,7 @@ function PlainScrollbar(customConfiguration) {
 
 			/**
 			 * Configure the number of items that should be considered.
-			 * @property changeNumberOfItems {{start: string|number, total: string|number, visible: string|number}}
+			 * @property numberOfItems {{start: string|number, total: string|number, visible: string|number}}
 			 */
 			numberOfItems: {
 				start: 0,
