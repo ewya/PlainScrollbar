@@ -196,7 +196,7 @@ function PlainScrollbar(customConfiguration) {
 	}
 
 	/**
-	 * Calculate a data object by an event that can be used for calling setSlider.
+	 * Calculate a data object by a (numberOfItems) start value that can be used for calling setSlider.
 	 * @param start
 	 * @returns {{source: string, type: string, value: number}}
 	 */
@@ -243,7 +243,7 @@ function PlainScrollbar(customConfiguration) {
 	}
 
 	/**
-	 * Calculate a data object by a (number of items) start value that can be used for calling setSlider.
+	 * Calculate a data object by an event object that can be used for calling setSlider.
 	 * @param event
 	 * @returns {{source: string, type: string, value: number}}
 	 */
