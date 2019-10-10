@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8" />
-	<title>Prototype of a custom scrollbar</title>
+	<title>PlainScrollbar - a simple custom scrollbar</title>
+	<script src="./polyfill.js" type="application/javascript"></script>
 	<style type="text/css">
-	/*
+	/**
 	 * common
 	 */
 	 
@@ -16,23 +17,35 @@
 		box-sizing: inherit;
 	}
 	
-	fieldset {
+	fieldset,
+	fieldset legend {
 		display: inline-block;
-		border-width: 0 0 0 1px;
+		border: 1px solid #ccc;
+		font-size: 12px;
+	}
+
+	fieldset {
+		width: 80vw;
+		margin: 0;
+	}
+
+	fieldset legend {
+		padding: 3px 6px;
+		font-size: 14px;
 	}
 	
 	h1 small {
 		color: #999;
 	}
 
-	/*
+	/**
 	 * #thing...
 	 */
 	
 	#thingWrapper {
 		position: relative;
 		overflow: hidden;
-		height: 60vh;
+		height: 55vh;
 		width: 80vw;
 		background-color: #ccc;
 		border: 1px solid #ccc;
@@ -83,8 +96,8 @@
 	<link href="./plain-scrollbar.css" rel="stylesheet" type="text/css">
 	<script src="./plain-scrollbar.js" type="application/javascript"></script>
 	<style type="text/css">
-	/*
-	 * some .plain-scrollbar style overloading
+	/**
+	 * Some .plain-scrollbar style overloading
 	 */
 
 	.plain-scrollbar.scrollbar-horizontal .slider {
@@ -116,18 +129,18 @@
 PlainScrollbar instances can be horizontal or vertical.
 </p>
 
-<hr>
+<h3>Example</h3>
 
 <div id="thing">
 	<div id="thingControl">
 		<fieldset class="thing-wrapper">
-			<legend>vertical options</legend>
+			<legend>Adjust the vertical scrollbar numberOfItems configuration</legend>
 			<div>
-				<label>total</label>
+				<label for="totalValueInput">total</label>
 				<input id="totalValueInput" type="number" value="">
 			</div>
 			<div>
-				<label>start</label>
+				<label for="startValueInput">start</label>
 				<input id="startValueInput" type="number" value="">
 			</div>
 			<div>
@@ -148,116 +161,25 @@ PlainScrollbar instances can be horizontal or vertical.
 
 <script>
 
-// IE11 polyfill from https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Global_Objects/String/repeat
-if (!String.prototype.repeat) {
-  String.prototype.repeat = function(count) {
-    'use strict';
-    if (this == null) {
-      throw new TypeError('can\'t convert ' + this + ' to object');
-    }
-    var str = '' + this;
-    count = +count;
-    if (count !== count) {
-      count = 0;
-    }
-    if (count < 0) {
-      throw new RangeError('repeat count must be non-negative');
-    }
-    if (count === Infinity) {
-      throw new RangeError('repeat count must be less than infinity');
-    }
-    count = Math.floor(count);
-    if (str.length === 0 || count === 0) {
-      return '';
-    }
-    // Ensuring count is a 31-bit integer allows us to heavily optimize the
-    // main part. But anyway, most current (August 2014) browsers can't handle
-    // strings 1 << 28 chars or longer, so:
-    if (str.length * count >= 1 << 28) {
-      throw new RangeError('repeat count must not overflow maximum string size');
-    }
-    var rpt = '';
-    for (var i = 0; i < count; i++) {
-      rpt += str;
-    }
-    return rpt;
-  }
-}
+
+
+/**
+ * Using & controlling PlainScrollbar
+ */
 
 var thingContentWrapperElement = document.getElementById('thingContentWrapper'),
 	contentElement = document.getElementById('thingContent'),
-	itemSizeVertical = 0;
-
-/**
- * using & controlling PlainScrollbar
- */
-
-var totalValueInputElement = document.getElementById('totalValueInput'),
+	itemSizeVertical = 0,
+	totalValueInputElement = document.getElementById('totalValueInput'),
 	startValueInputElement = document.getElementById('startValueInput'),
 	visibleValueInputElement = document.getElementById('visibleValueInput');
 	
 totalValueInputElement.value = 100;
 startValueInputElement.value = 0;
 
-function changeNumberOfItems(total) {
-	total = parseInt(total);
-	var items = contentElement.getElementsByTagName('SPAN'),
-		delta = total - items.length,
-		iStart = items.length,
-		iMax = (items.length + delta),
-		i;
-		
-	if (delta > 0) {
-		var buffer = contentElement.innerHTML;
-		for (i = iStart; i < iMax; i++) {
-			buffer += '<span>' + (i) + ' ' + String('~').repeat(Math.floor(Math.random() * Math.floor(125))) + '</span>';
-		}
-		contentElement.innerHTML = buffer;
-	}
-	
-	if (delta < 0) {
-		for (i = (iStart -1); i > (iMax -1); i--) {
-			var child = items[i];
-			//child.remove(); //< Does not exist in IE 11
-			contentElement.removeChild(child);
-		}
-	}
-	
-	items = contentElement.getElementsByTagName('SPAN');
-	if (items.length > 0) {
-		var itemBoundingClientRect = items[0].getBoundingClientRect();
-		itemSizeVertical = itemBoundingClientRect.height;
-	} else {
-		itemSizeVertical = 0;
-	}
-}
-
-function determineNumberOfItems(orientation) {
-	var numberOfItems = {};
-	switch(orientation) {
-		case 'horizontal':
-			numberOfItems = {
-				total: contentElement.scrollWidth,
-				visible: Math.round(thingContentWrapperElement.clientWidth),
-				start: 0
-			};
-			break;
-		
-		case 'vertical':
-			numberOfItems = {
-				total: parseInt(totalValueInputElement.value),
-				visible: thingContentWrapperElement.clientHeight / itemSizeVertical,
-				start: parseInt(startValueInputElement.value),
-			};
-			visibleValueInputElement.innerHTML = numberOfItems.visible;
-			break;
-	}
-	return numberOfItems;
-}
-
 changeNumberOfItems(totalValueInputElement.value);
 
-// init horizontal scrollbar
+// Init horizontal scrollbar
 var horizontalScrollbar = new PlainScrollbar({
 	// alwaysVisible: true,
 	// arrows: true,
@@ -271,7 +193,7 @@ var horizontalScrollbar = new PlainScrollbar({
 	wheelSpeed: 8,
 });
 	
-// init vertical scrollbar
+// Init vertical scrollbar
 var verticalScrollbar = new PlainScrollbar({
 	alwaysVisible: true,
 	arrows: true,
@@ -284,12 +206,12 @@ var verticalScrollbar = new PlainScrollbar({
 	scrollbarElement: document.getElementById('thingScrollbarVertical'),
 });
 
+// Controlling PlainScrollbar instances
+
 contentElement.addEventListener('wheel', function(event) {
 	event.preventDefault();
-	if (verticalScrollbar.isEnabled())
-		verticalScrollbar.set(event);
-	if (horizontalScrollbar.isEnabled())
-		horizontalScrollbar.set(event);
+	verticalScrollbar.set(event);
+	horizontalScrollbar.set(event);
 }, false);
 
 window.addEventListener('resize', function(event) {
@@ -298,34 +220,86 @@ window.addEventListener('resize', function(event) {
 }, false);
 
 totalValueInputElement.addEventListener('keypress', function (event) {
-// 	console.log('totalValueInputElement:keypress', event);
-    var key = event.which || event.keyCode;
-    if (key === 13) { // 13 eq ENTER
+	if ('Enter' === event.key) {
 		event.preventDefault();
 		changeNumberOfItems(totalValueInputElement.value);
 		verticalScrollbar.set(determineNumberOfItems('vertical'));
     }
 });
 totalValueInputElement.addEventListener('blur', function(event) {
-// 	console.log('totalValueInputElement:blur', event);
 	event.preventDefault();
 	changeNumberOfItems(totalValueInputElement.value);
 	verticalScrollbar.set(determineNumberOfItems('vertical'));
 }, false);
 
 startValueInputElement.addEventListener('keypress', function (event) {
-// 	console.log('startValueInputElement:keypress', event);
-    var key = event.which || event.keyCode;
-    if (key === 13) { // 13 eq ENTER
+    if ('Enter' === event.key) {
 		event.preventDefault();
 		verticalScrollbar.set(determineNumberOfItems('vertical'));
     }
 });
 startValueInputElement.addEventListener('blur', function(event) {
-// 	console.log('startValueInputElement:blur', event);
 	event.preventDefault();
 	verticalScrollbar.set(determineNumberOfItems('vertical'));
 }, false);
+
+// helper functions
+
+function changeNumberOfItems(total) {
+	total = parseInt(total);
+	var items = contentElement.getElementsByTagName('SPAN'),
+		delta = total - items.length,
+		iStart = items.length,
+		iMax = (items.length + delta),
+		i;
+
+	if (delta > 0) {
+		var buffer = contentElement.innerHTML;
+		for (i = iStart; i < iMax; i++) {
+			buffer += '<span>' + (i) + ' ' + String('~').repeat(Math.floor(Math.random() * Math.floor(125))) + '</span>';
+		}
+		contentElement.innerHTML = buffer;
+	}
+
+	if (delta < 0) {
+		for (i = (iStart -1); i > (iMax -1); i--) {
+			var child = items[i];
+			//child.remove(); //< Does not exist in IE 11
+			contentElement.removeChild(child);
+		}
+	}
+
+	items = contentElement.getElementsByTagName('SPAN');
+	if (items.length > 0) {
+		var itemBoundingClientRect = items[0].getBoundingClientRect(); //< Assume that all items have the same height.
+		itemSizeVertical = itemBoundingClientRect.height;
+	} else {
+		itemSizeVertical = 0;
+	}
+}
+
+function determineNumberOfItems(orientation) {
+	var numberOfItems = {};
+	switch(orientation) {
+		case 'horizontal':
+			numberOfItems = {
+				start: 0,
+				total: contentElement.scrollWidth,
+				visible: Math.round(thingContentWrapperElement.clientWidth),
+			};
+			break;
+
+		case 'vertical':
+			numberOfItems = {
+				start: parseFloat(startValueInputElement.value),
+				total: parseInt(totalValueInputElement.value),
+				visible: thingContentWrapperElement.clientHeight / itemSizeVertical,
+			};
+			visibleValueInputElement.innerHTML = numberOfItems.visible;
+			break;
+	}
+	return numberOfItems;
+}
 
 </script>
 

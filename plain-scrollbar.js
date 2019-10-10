@@ -1,5 +1,16 @@
+/*!
+ * PlainScrollbar JavaScript Library v1.0.0-rc.0
+ * https://github.com/ewya/PlainScrollbar
+ *
+ * Copyright Kay Schewe <https://www.kayschewe.de>
+ * Released under the MIT license
+ * https://github.com/ewya/PlainScrollbar/blob/master/LICENSE
+ */
+
 /**
- * Construct a PlainScrollbar instance.
+ * PlainScrollbar
+ * @author Kay Schewe
+ * @copyright 2019 - present
  * @param customConfiguration
  * @constructor
  */
@@ -12,7 +23,7 @@ function PlainScrollbar(customConfiguration) {
 	 * @param enabled {boolean} Will be evaluated as boolean.
 	 */
 	this.enabled = function(enabled) {
-		configuration.scrollbarElement.setAttribute('data-enabled', enabled);
+		scrollbarElement.setAttribute('data-enabled', enabled);
 		isEnabled = Boolean(enabled);
 	};
 
@@ -32,21 +43,20 @@ function PlainScrollbar(customConfiguration) {
 	 */
 	this.set = function(mixed, preventCallbackExecution) {
 
-		if (!isEnabled) {
-			// Prevent callback execution but adjust the scrollbar.
-			preventCallbackExecution = true;
-		}
-
 		if (isInternalEventSource) {
 			// Ignore external calls if currently an internal event source is processed.
 			return false;
+		}
+
+		if (!isEnabled) {
+			// Prevent callback execution but adjust the scrollbar.
+			preventCallbackExecution = true;
 		}
 
 		// Determine if data can be calculated by object (event | numberOfItems) or can be evaluated as string (start).
 		var data = null;
 
 		switch(typeof mixed) {
-
 			case 'object':
 				// Test if mixed can be evaluated as an event object.
 				data = calculateDataFromEvent(mixed);
@@ -55,10 +65,10 @@ function PlainScrollbar(customConfiguration) {
 				}
 
 				// Test if mixed can be evaluated as a numberOfItems object.
-				if (mixed.hasOwnProperty('start')
-					&& mixed.hasOwnProperty('total')
-					&& mixed.hasOwnProperty('visible')) {
-					// TODO: types ;-)
+				if (mixed.hasOwnProperty('start') && !isNaN(mixed.start)
+					&& mixed.hasOwnProperty('total') && !isNaN(mixed.total)
+					&& mixed.hasOwnProperty('visible') && !isNaN(mixed.visible)) {
+
 					configuration.numberOfItems = extend(configuration.numberOfItems, {
 						start: mixed.start,
 						total: mixed.total,
@@ -98,7 +108,7 @@ function PlainScrollbar(customConfiguration) {
 
 	/**
 	 * Set the slider and execute the onSet callback.
-	 * @param data
+	 * @param data {{source: string, type: string, value: number}}
 	 * @param preventCallbackExecution {boolean} True prevents the execution of the callback (default is false).
 	 */
 	function setSlider(data, preventCallbackExecution) {
@@ -149,29 +159,29 @@ function PlainScrollbar(customConfiguration) {
 			newValue = maxValue;
 		}
 
+		// Adjust sliderElement valueAttribute (left or top).
+		if (currentValue !== newValue) {
+			sliderElement.style[valueAttribute] = newValue + 'px';
+		}
 
-		configuration.scrollbarElement.setAttribute('data-scrollable', isScrollable);
+		// Adjust sliderElement maxAttribute (height or width).
+		if (sliderBoundingClientRect[maxAttribute] !== sliderSize) {
+			sliderElement.style[maxAttribute] = sliderSize + 'px';
+		}
+
+		// Adjust scrollbarElement data-scrollable attribute.
+		scrollbarElement.setAttribute('data-scrollable', isScrollable);
 
 		// Formula: start / value = (total - visible) / (sliderAreaSize - sliderSize)
 
 		configuration.numberOfItems.start =
 			(configuration.numberOfItems.total - configuration.numberOfItems.visible) / maxValue * newValue;
 
-		// adjust sliderElement valueAttribute (left or top)
-		if (currentValue !== newValue) {
-			sliderElement.style[valueAttribute] = newValue + 'px';
-		}
-
-		// adjust sliderElement maxAttribute (height or width)
-		if (sliderBoundingClientRect[maxAttribute] !== sliderSize) {
-			sliderElement.style[maxAttribute] = sliderSize + 'px';
-		}
-
 		if (executeCallback) {
-			// execute onSet callback and provide numberOfItems
+			// Execute the onSet callback and provide numberOfItems.
 			if ('function' === typeof configuration.onSet) {
-				// scope of 'this' is the PlainScrollbar instance
 				this.onSet = configuration.onSet;
+				// The callback scope of 'this' is the PlainScrollbar instance.
 				this.onSet({
 					start: configuration.numberOfItems.start,
 					total: configuration.numberOfItems.total,
@@ -186,7 +196,7 @@ function PlainScrollbar(customConfiguration) {
 	}
 
 	/**
-	 * Calculates a data object by an event that can be used for calling setSlider.
+	 * Calculate a data object by an event that can be used for calling setSlider.
 	 * @param start
 	 * @returns {{source: string, type: string, value: number}}
 	 */
@@ -215,11 +225,10 @@ function PlainScrollbar(customConfiguration) {
 		var sliderAreaBoundingClientRect = sliderAreaElement.getBoundingClientRect(),
 			sliderAreaSize = sliderAreaBoundingClientRect[maxAttribute],
 			itemSize = sliderAreaSize / configuration.numberOfItems.total,
-			sliderSize = Math.max(configuration.sliderMinSize, configuration.numberOfItems.visible * itemSize);
+			sliderSize = Math.max(configuration.sliderMinSize, configuration.numberOfItems.visible * itemSize),
+			maxValue = sliderAreaSize - sliderSize;
 
 		// Formula: start / value = (total - visible) / (sliderAreaSize - sliderSize)
-
-		var maxValue = sliderAreaSize - sliderSize;
 
 		data.value = maxValue / (configuration.numberOfItems.total - configuration.numberOfItems.visible) * start;
 
@@ -234,7 +243,7 @@ function PlainScrollbar(customConfiguration) {
 	}
 
 	/**
-	 * Calculates a data object by a (number of items) start value that can be used for calling setSlider.
+	 * Calculate a data object by a (number of items) start value that can be used for calling setSlider.
 	 * @param event
 	 * @returns {{source: string, type: string, value: number}}
 	 */
@@ -295,7 +304,7 @@ function PlainScrollbar(customConfiguration) {
 		}
 
 		event.preventDefault();
-		configuration.scrollbarElement.setAttribute('data-visible', true);
+		scrollbarElement.setAttribute('data-visible', true);
 	}
 
 	/**
@@ -309,7 +318,7 @@ function PlainScrollbar(customConfiguration) {
 
 		event.preventDefault();
 		if (!isSliderDrag && !configuration.alwaysVisible) {
-			configuration.scrollbarElement.setAttribute('data-visible', false);
+			scrollbarElement.setAttribute('data-visible', false);
 		}
 	}
 
@@ -371,14 +380,11 @@ function PlainScrollbar(customConfiguration) {
 	}
 
 	/**
-	 * Handle slider area wheel event if it's not a slider drag operation.
+	 * Handle slider area wheel event if scrollbar is enabled and if it's not a slider drag operation.
 	 * @param event
 	 */
 	function sliderAreaWheel(event) {
-		if (!isEnabled) {
-			return;
-		}
-		if (isSliderDrag) {
+		if (!isEnabled || isSliderDrag) {
 			return;
 		}
 
@@ -392,7 +398,7 @@ function PlainScrollbar(customConfiguration) {
 	/** sliderElement event listener */
 
 	/**
-	 * Handle slider mousedown event.
+	 * Handle slider mousedown event if scrollbar is enabled.
 	 * @param event
 	 */
 	function sliderMouseDown(event) {
@@ -442,7 +448,7 @@ function PlainScrollbar(customConfiguration) {
 		event.preventDefault();
 		clearTimeout(eventTimeout);
 		if (!configuration.alwaysVisible) {
-			configuration.scrollbarElement.setAttribute('data-visible', false);
+			scrollbarElement.setAttribute('data-visible', false);
 		}
 		if (isEnabled) {
 			setSlider(calculateDataFromEvent(event));
@@ -487,23 +493,27 @@ function PlainScrollbar(customConfiguration) {
 	var defaultConfiguration = {
 			/**
 			 * Configure that the scrollbar is always visible.
+			 * @property alwaysVisible {boolean}
 			 */
 			alwaysVisible: false,
 
 			/**
 			 * Configure that the scrollbar has arrows on each end.
 			 * An arrow click will move the slider by one item backward or forward.
+			 * @property arrows {boolean}
 			 */
 			arrows: false,
 
 			/**
 			 * Configure that a click on the slider area will move the slider by the numberOfItems.visible backward
 			 * or forward.
+			 * @property movePageByPageOnAreaClick {boolean}
 			 */
 			movePageByPageOnAreaClick: true,
 
 			/**
-			 * Configure the number of items the should be considered.
+			 * Configure the number of items that should be considered.
+			 * @property changeNumberOfItems {{start: string|number, total: string|number, visible: string|number}}
 			 */
 			numberOfItems: {
 				start: 0,
@@ -514,32 +524,36 @@ function PlainScrollbar(customConfiguration) {
 			/**
 			 * Configure the callback, that should to be called if the scrollbar will change the slider and therefore
 			 * the numberOfItems.start. The current numberOfItems object is the sole callback function parameter.
+			 * @property onSet {function(numberOfItems){// Do something...}}
 			 */
 			onSet: null,
 
 			/**
-			 * Provide a applicable DOM container element.
+			 * Configure the scrollbar element, that must be a html5 container element (e.g. <div/>).
+			 * @property scrollbarElement {HTMLElement}
 			 */
 			scrollbarElement: null,
 
 			/**
 			 * Configure the minimal size of the slider by px.
+			 * @property sliderMinSize {number}
 			 */
 			sliderMinSize: 20,
 
 			/**
 			 * Configure the wheel speed factor.
+			 * @property wheelSpeed {number}
 			 */
 			wheelSpeed: 2,
 		},
-		// TODO: Description.
+		// Private properties...
 		eventTimeout = null,
 		isEnabled = true,
 		isInternalEventSource = false,
 		isSliderDrag = false,
 		sliderOffset = 0;
 	
-	// Configuration etc...
+	// Validate configuration
 
 	if (!customConfiguration) {
 		throw 'Missing customConfiguration!';
@@ -553,7 +567,11 @@ function PlainScrollbar(customConfiguration) {
 		throw 'Missing valid configuration.orientation!';
 	}
 
-	var configuration = extend(defaultConfiguration, customConfiguration);
+	// Proceed to create the scrollbar...
+
+	var configuration = extend(defaultConfiguration, customConfiguration),
+		scrollbarElement = configuration.scrollbarElement,
+		scrollbarElementDocument = scrollbarElement.ownerDocument;
 
 	var cssClasses = [
 			'plain-scrollbar',
@@ -571,21 +589,20 @@ function PlainScrollbar(customConfiguration) {
 		valueAttribute = 'top';
 	}
 
-	// determine scrollbarElement
-	configuration.scrollbarElement.setAttribute('data-enabled', true);
-	configuration.scrollbarElement.setAttribute('data-scrollable', true);
-	configuration.scrollbarElement.setAttribute('data-visible', (configuration.alwaysVisible === true));
+	scrollbarElement.setAttribute('data-enabled', true);
+	scrollbarElement.setAttribute('data-scrollable', true);
+	scrollbarElement.setAttribute('data-visible', (configuration.alwaysVisible === true));
 	for (var i = 0; i < cssClasses.length; i++) {
-		configuration.scrollbarElement.classList.add(cssClasses[i]);
+		scrollbarElement.classList.add(cssClasses[i]);
 	}
 
 	// determine arrowElements and create them if configured.
 	var arrowElements = {};
 	if (configuration.arrows) {
-		configuration.scrollbarElement.classList.add('has-arrows');
+		scrollbarElement.classList.add('has-arrows');
 		arrowElements = {
-			'backward': document.createElement('div'),
-			'forward': document.createElement('div'),
+			'backward': scrollbarElementDocument.createElement('div'),
+			'forward': scrollbarElementDocument.createElement('div'),
 		};
 	}
 
@@ -624,29 +641,29 @@ function PlainScrollbar(customConfiguration) {
 		}
 
 		arrowElements[m].classList.add(cssClass);
-		arrowElements[m].append(document.createElement('span'));
+		arrowElements[m].appendChild(scrollbarElementDocument.createElement('span'));
 		arrowElements[m].addEventListener('mousedown', listener, false);
-		configuration.scrollbarElement.appendChild(arrowElements[m]);
+		scrollbarElement.appendChild(arrowElements[m]);
 	}
 
-	var sliderElement = document.createElement('div');
+	var sliderElement = scrollbarElementDocument.createElement('div');
 	sliderElement.classList.add('slider');
 	sliderElement.style[valueAttribute] = '0';
 	sliderElement.style[maxAttribute] = '0';
 	sliderElement.addEventListener('mousedown', sliderMouseDown, false);
 
-	var sliderAreaElement = document.createElement('div');
+	var sliderAreaElement = scrollbarElementDocument.createElement('div');
 	sliderAreaElement.classList.add('slider-area');
 	sliderAreaElement.appendChild(sliderElement);
 	sliderAreaElement.addEventListener('mousedown', sliderAreaMouseDown, false);
 	sliderAreaElement.addEventListener('mouseup', sliderAreaMouseUp, false);
 	sliderAreaElement.addEventListener('wheel', sliderAreaWheel, false);
 	
-	configuration.scrollbarElement.appendChild(sliderAreaElement);
-	configuration.scrollbarElement.addEventListener('mouseenter', scrollbarMouseEnter, false);
-	configuration.scrollbarElement.addEventListener('mouseleave', scrollbarMouseLeave, false);
+	scrollbarElement.appendChild(sliderAreaElement);
+	scrollbarElement.addEventListener('mouseenter', scrollbarMouseEnter, false);
+	scrollbarElement.addEventListener('mouseleave', scrollbarMouseLeave, false);
 
-	var scrollbarElementWindow = configuration.scrollbarElement.ownerDocument.defaultView;
+	var scrollbarElementWindow = scrollbarElementDocument.defaultView;
 	scrollbarElementWindow.addEventListener('mousemove', windowMouseMove, false);
 	scrollbarElementWindow.addEventListener('mouseup', windowMouseUp, false);
 
