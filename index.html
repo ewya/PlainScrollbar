@@ -70,9 +70,10 @@
 	#thingContent span {
 		display: table-row;
 		height: 20px;
+		font-family: monospace;
 		font-size: 12px;
 		line-height: 20px;
-		white-space: nowrap;
+		white-space: pre;
 		background-color: #eee;
 	}
 	#thingContent span:nth-child(even) {
@@ -91,7 +92,7 @@
 		display: inline-block;
 		margin-bottom: 0.25em;
 	}
-	
+
 	</style>
 	<link href="./plain-scrollbar.css" rel="stylesheet" type="text/css">
 	<script src="./plain-scrollbar.js" type="application/javascript"></script>
@@ -118,7 +119,19 @@
 	.plain-scrollbar[data-visible="true"] .slider {
 		background-color: rgba(0, 130, 145, 0.9);
 	}
-	
+
+	.plain-scrollbar.scrollbar-wrapper-vertical {
+		height: calc(100% - 17px);
+	}
+	.plain-scrollbar.scrollbar-wrapper-vertical.full-size {
+		height: calc(100% - 0px);
+	}
+	.plain-scrollbar.scrollbar-wrapper-horizontal {
+		width: calc(100% - 17px);
+	}
+	.plain-scrollbar.scrollbar-wrapper-horizontal.full-size {
+		width: calc(100% - 0px);
+	}
 	</style>
 </head>
 <body>
@@ -134,18 +147,21 @@ PlainScrollbar instances can be horizontal or vertical.
 <div id="thing">
 	<div id="thingControl">
 		<fieldset class="thing-wrapper">
-			<legend>Adjust the vertical scrollbar numberOfItems configuration</legend>
-			<div>
-				<label for="totalValueInput">total</label>
-				<input id="totalValueInput" type="number" value="">
+			<legend>Adjust the vertical scrollbar configuration</legend>
+			<div style="display: block;">
+				<label><input id="verticalEnabledInput" type="checkbox" value="true" checked> enabled</label>
 			</div>
 			<div>
-				<label for="startValueInput">start</label>
-				<input id="startValueInput" type="number" value="">
+				<label for="verticalTotalInput">total</label>
+				<input id="verticalTotalInput" type="number" value="">
+			</div>
+			<div>
+				<label for="verticalStartInput">start</label>
+				<input id="verticalStartInput" type="number" value="">
 			</div>
 			<div>
 				<label>visible</label>
-				<span id="visibleValueInput"></span>
+				<span id="verticalVisibleInput"></span>
 			</div>
 		</fieldset>	
 	</div>
@@ -154,14 +170,12 @@ PlainScrollbar instances can be horizontal or vertical.
 		<div id="thingContentWrapper">
 			<div id="thingContent"></div>
 		</div>
-		<div id="thingScrollbarVertical" class="scrollbar-wrapper" style="height: calc(100% - 17px);"></div>
-		<div id="thingScrollbarHorizontal" class="scrollbar-wrapper" style="width: calc(100% - 17px);"></div>
+		<div id="thingScrollbarVertical" class="scrollbar-wrapper-vertical"></div>
+		<div id="thingScrollbarHorizontal" class="scrollbar-wrapper-horizontal"></div>
 	</div>
 </div>
 
 <script>
-
-
 
 /**
  * Using & controlling PlainScrollbar
@@ -169,81 +183,126 @@ PlainScrollbar instances can be horizontal or vertical.
 
 var thingContentWrapperElement = document.getElementById('thingContentWrapper'),
 	contentElement = document.getElementById('thingContent'),
-	itemSizeVertical = 0,
-	totalValueInputElement = document.getElementById('totalValueInput'),
-	startValueInputElement = document.getElementById('startValueInput'),
-	visibleValueInputElement = document.getElementById('visibleValueInput');
+	horizontalScrollbarElement = document.getElementById('thingScrollbarHorizontal'),
+	verticalScrollbarElement = document.getElementById('thingScrollbarVertical'),
+	// vertical related vars
+	verticalItemSize = 0,
+	verticalEnabledInputElement = document.getElementById('verticalEnabledInput'),
+	verticalTotalInputElement = document.getElementById('verticalTotalInput'),
+	verticalStartInputElement = document.getElementById('verticalStartInput'),
+	verticalVisibleInputElement = document.getElementById('verticalVisibleInput');
 	
-totalValueInputElement.value = 100;
-startValueInputElement.value = 0;
+verticalTotalInputElement.value = 200;
+verticalStartInputElement.value = 0;
 
-changeNumberOfItems(totalValueInputElement.value);
+changeNumberOfItems(verticalTotalInputElement.value);
 
 // Init horizontal scrollbar
+
 var horizontalScrollbar = new PlainScrollbar({
-	// alwaysVisible: true,
-	// arrows: true,
-	movePageByPageOnAreaClick: false,
-	numberOfItems: determineNumberOfItems('horizontal'),
-	orientation: 'horizontal',
-	onSet: function(numberOfItems) {
-		contentElement.style['left'] = (numberOfItems.start  * -1) + 'px';
-	},
-	scrollbarElement: document.getElementById('thingScrollbarHorizontal'),
-	wheelSpeed: 8,
-});
+		alwaysVisible: false,
+		numberOfItems: determineNumberOfItems('horizontal'),
+		orientation: 'horizontal',
+		onScrollable: function(scrollable) {
+			adjustScrollbarSizes(scrollable);
+		},
+		onSet: function(numberOfItems) {
+			contentElement.style['left'] = (numberOfItems.start  * -1) + 'px'
+		},
+		scrollbarElement: horizontalScrollbarElement,
+		wheelSpeed: 8,
+	});
 	
 // Init vertical scrollbar
+
 var verticalScrollbar = new PlainScrollbar({
-	alwaysVisible: true,
-	arrows: true,
-	numberOfItems: determineNumberOfItems('vertical'),
-	orientation: 'vertical',
-	onSet: function(numberOfItems) {
-		contentElement.style['top'] = (numberOfItems.start * -itemSizeVertical) + 'px';
-		startValueInputElement.value = numberOfItems.start;
-	},
-	scrollbarElement: document.getElementById('thingScrollbarVertical'),
-});
+		arrows: true,
+		numberOfItems: determineNumberOfItems('vertical'),
+		orientation: 'vertical',
+		onScrollable: function(scrollable) {
+			adjustScrollbarSizes(scrollable);
+		},
+		onSet: function(numberOfItems) {
+			contentElement.style['top'] = (numberOfItems.start * -verticalItemSize) + 'px';
+			verticalStartInputElement.value = numberOfItems.start;
+		},
+		scrollbarElement: verticalScrollbarElement,
+	});
 
 // Controlling PlainScrollbar instances
-
-contentElement.addEventListener('wheel', function(event) {
-	event.preventDefault();
-	verticalScrollbar.set(event);
-	horizontalScrollbar.set(event);
-}, false);
 
 window.addEventListener('resize', function(event) {
 	horizontalScrollbar.set(determineNumberOfItems('horizontal'));
 	verticalScrollbar.set(determineNumberOfItems('vertical'));
 }, false);
 
-totalValueInputElement.addEventListener('keypress', function (event) {
-	if ('Enter' === event.key) {
-		event.preventDefault();
-		changeNumberOfItems(totalValueInputElement.value);
-		verticalScrollbar.set(determineNumberOfItems('vertical'));
-    }
-});
-totalValueInputElement.addEventListener('blur', function(event) {
+contentElement.addEventListener('wheel', function(event) {
 	event.preventDefault();
-	changeNumberOfItems(totalValueInputElement.value);
+	if (horizontalScrollbar.isEnabled()) {
+		horizontalScrollbar.set(event);
+	}
+	if (verticalScrollbar.isEnabled()) {
+		verticalScrollbar.set(event);
+	}
+}, false);
+
+verticalEnabledInputElement.addEventListener('click', function(event) {
+	verticalScrollbar.enabled(verticalEnabledInputElement.checked);
+}, false);
+
+verticalTotalInputElement.addEventListener('keypress', function (event) {
+	if ('Enter' !== event.key) {
+		return;
+	}
+
+	event.preventDefault();
+	changeNumberOfItems(verticalTotalInputElement.value);
+	verticalScrollbar.set(determineNumberOfItems('vertical'));
+});
+
+verticalTotalInputElement.addEventListener('blur', function(event) {
+	event.preventDefault();
+	changeNumberOfItems(verticalTotalInputElement.value);
 	verticalScrollbar.set(determineNumberOfItems('vertical'));
 }, false);
 
-startValueInputElement.addEventListener('keypress', function (event) {
-    if ('Enter' === event.key) {
-		event.preventDefault();
-		verticalScrollbar.set(determineNumberOfItems('vertical'));
+verticalStartInputElement.addEventListener('keypress', function (event) {
+    if ('Enter' !== event.key) {
+		return;
     }
+
+	event.preventDefault();
+	verticalScrollbar.set(determineNumberOfItems('vertical'));
 });
-startValueInputElement.addEventListener('blur', function(event) {
+
+verticalStartInputElement.addEventListener('blur', function(event) {
 	event.preventDefault();
 	verticalScrollbar.set(determineNumberOfItems('vertical'));
 }, false);
 
 // helper functions
+
+function adjustScrollbarSizes(scrollable) {
+	if (!horizontalScrollbar || !verticalScrollbar) {
+		 return;
+	}
+
+	var fullSizeClass = 'full-size',
+		isScrollableHorizontal = horizontalScrollbar.isScrollable(),
+		isScrollableVertical = verticalScrollbar.isScrollable();
+
+	if (isScrollableHorizontal && isScrollableVertical) {
+		horizontalScrollbarElement.classList.remove(fullSizeClass);
+		verticalScrollbarElement.classList.remove(fullSizeClass);
+	} else if (isScrollableHorizontal) {
+		horizontalScrollbarElement.classList.add(fullSizeClass);
+		verticalScrollbarElement.classList.remove(fullSizeClass);
+	} else if (isScrollableVertical) {
+		horizontalScrollbarElement.classList.remove(fullSizeClass);
+		verticalScrollbarElement.classList.add(fullSizeClass);
+	}
+}
+adjustScrollbarSizes();
 
 function changeNumberOfItems(total) {
 	total = parseInt(total);
@@ -254,9 +313,10 @@ function changeNumberOfItems(total) {
 		i;
 
 	if (delta > 0) {
-		var buffer = contentElement.innerHTML;
+		var buffer = contentElement.innerHTML,
+			padLength = iMax.toString().length;
 		for (i = iStart; i < iMax; i++) {
-			buffer += '<span>' + (i) + ' ' + String('~').repeat(Math.floor(Math.random() * Math.floor(125))) + '</span>';
+			buffer += '<span>' + i.toString().padStart(padLength) + ' &boxvr;' + String('&boxh;').repeat(Math.floor(Math.random() * Math.floor(123))) + '&boxvl;</span>';
 		}
 		contentElement.innerHTML = buffer;
 	}
@@ -272,9 +332,9 @@ function changeNumberOfItems(total) {
 	items = contentElement.getElementsByTagName('SPAN');
 	if (items.length > 0) {
 		var itemBoundingClientRect = items[0].getBoundingClientRect(); //< Assume that all items have the same height.
-		itemSizeVertical = itemBoundingClientRect.height;
+		verticalItemSize = itemBoundingClientRect.height;
 	} else {
-		itemSizeVertical = 0;
+		verticalItemSize = 0;
 	}
 }
 
@@ -291,11 +351,11 @@ function determineNumberOfItems(orientation) {
 
 		case 'vertical':
 			numberOfItems = {
-				start: parseFloat(startValueInputElement.value),
-				total: parseInt(totalValueInputElement.value),
-				visible: thingContentWrapperElement.clientHeight / itemSizeVertical,
+				start: parseFloat(verticalStartInputElement.value),
+				total: parseInt(verticalTotalInputElement.value),
+				visible: thingContentWrapperElement.clientHeight / verticalItemSize,
 			};
-			visibleValueInputElement.innerHTML = numberOfItems.visible;
+			verticalVisibleInputElement.innerHTML = numberOfItems.visible;
 			break;
 	}
 	return numberOfItems;
