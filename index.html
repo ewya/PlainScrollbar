@@ -316,7 +316,7 @@ function changeNumberOfItems(total) {
 		var buffer = contentElement.innerHTML,
 			padLength = iMax.toString().length;
 		for (i = iStart; i < iMax; i++) {
-			buffer += '<span>' + i.toString().padStart(padLength) + ' &boxvr;' + String('&boxh;').repeat(Math.floor(Math.random() * Math.floor(123))) + '&boxvl;</span>';
+			buffer += '<span>' + (i + 1).toString().padStart(padLength) + ' &boxvr;' + String('&boxh;').repeat(Math.floor(Math.random() * Math.floor(123))) + '&boxvl;</span>';
 		}
 		contentElement.innerHTML = buffer;
 	}
