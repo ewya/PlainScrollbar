@@ -54,8 +54,8 @@
 	#thingContentWrapper {
 		position: relative;
 		overflow: hidden;
-		height: 100%; /*calc(100% - 16px);*/
-		width: calc(100% - 16px);
+		height: 100%; /* calc(100% - 16px); */
+		width: calc(100% - 16px); /* 100%; */
 		border-color: #ccc;
 		border-style: solid;
 		border-width: 0 1px 1px 0;
@@ -148,9 +148,13 @@ PlainScrollbar instances can be horizontal or vertical.
 	<div id="thingControl">
 		<fieldset class="thing-wrapper">
 			<legend>Adjust the vertical scrollbar configuration</legend>
-			<div style="display: block;">
+			<div style="float: left; margin-right: 10px;">
+				<label><input id="verticalAlwaysVisibleInput" type="checkbox" value="true" checked> alwaysVisible</label>
+			</div>
+			<div style="float: left;">
 				<label><input id="verticalEnabledInput" type="checkbox" value="true" checked> enabled</label>
 			</div>
+			<br style="clear: both;">
 			<div>
 				<label for="verticalTotalInput">total</label>
 				<input id="verticalTotalInput" type="number" value="">
@@ -187,6 +191,7 @@ var thingContentWrapperElement = document.getElementById('thingContentWrapper'),
 	verticalScrollbarElement = document.getElementById('thingScrollbarVertical'),
 	// vertical related vars
 	verticalItemSize = 0,
+	verticalAlwaysVisibleInput = document.getElementById('verticalAlwaysVisibleInput'),
 	verticalEnabledInputElement = document.getElementById('verticalEnabledInput'),
 	verticalTotalInputElement = document.getElementById('verticalTotalInput'),
 	verticalStartInputElement = document.getElementById('verticalStartInput'),
@@ -217,7 +222,7 @@ var horizontalScrollbar = new PlainScrollbar({
 
 var verticalScrollbar = new PlainScrollbar({
 		arrows: true,
-		numberOfItems: determineNumberOfItems('vertical'),
+		// numberOfItems: determineNumberOfItems('vertical'),
 		orientation: 'vertical',
 		onScrollable: function(scrollable) {
 			adjustScrollbarSizes(scrollable);
@@ -228,6 +233,8 @@ var verticalScrollbar = new PlainScrollbar({
 		},
 		scrollbarElement: verticalScrollbarElement,
 	});
+
+verticalScrollbar.set(determineNumberOfItems('vertical'));
 
 // Controlling PlainScrollbar instances
 
@@ -244,6 +251,10 @@ contentElement.addEventListener('wheel', function(event) {
 	if (verticalScrollbar.isEnabled()) {
 		verticalScrollbar.set(event);
 	}
+}, false);
+
+verticalAlwaysVisibleInput.addEventListener('click', function(event) {
+	verticalScrollbar.alwaysVisible(verticalAlwaysVisibleInput.checked);
 }, false);
 
 verticalEnabledInputElement.addEventListener('click', function(event) {
