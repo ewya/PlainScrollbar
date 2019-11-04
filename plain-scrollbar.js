@@ -11,7 +11,7 @@
  * PlainScrollbar
  * @author Kay Schewe
  * @copyright 2019 - present
- * @param customConfiguration
+ * @param {object} customConfiguration
  * @constructor
  */
 function PlainScrollbar(customConfiguration) {
@@ -23,33 +23,33 @@ function PlainScrollbar(customConfiguration) {
 		defaultConfiguration = {
 			/**
 			 * Configure that the scrollbar is always visible.
-			 * @property alwaysVisible {boolean}
+			 * @property {boolean} [alwaysVisible=true]
 			 */
 			alwaysVisible: true,
 
 			/**
 			 * Configure that the scrollbar has arrows on each end.
 			 * An arrow click will move the slider by one item backward or forward.
-			 * @property arrows {boolean}
+			 * @property {boolean} [arrows=false]
 			 */
 			arrows: false,
 
 			/**
 			 * Configure the enabled state of the scrollbar.
-			 * @property enabled {boolean}
+			 * @property {boolean} [enabled=true]
 			 */
 			enabled: true,
 
 			/**
 			 * Configure that a click on the slider area will move the slider by the numberOfItems.visible backward
 			 * or forward.
-			 * @property movePageByPageOnAreaClick {boolean}
+			 * @property {boolean} [movePageByPageOnAreaClick=true]
 			 */
 			movePageByPageOnAreaClick: true,
 
 			/**
 			 * Configure the number of items that should be considered.
-			 * @property numberOfItems {{start: string|number, total: string|number, visible: string|number}}
+			 * @property {{start: string|number, total: string|number, visible: string|number}} numberOfItems
 			 */
 			numberOfItems: {
 				start: 0,
@@ -60,34 +60,33 @@ function PlainScrollbar(customConfiguration) {
 			/**
 			 * Configure the callback that should to be called if the scrollbar will change the scrollable state (i.e.
 			 * can or cannot be scrolled). An "scrollable" event object is the sole callback function parameter.
-			 * @param scrollable {{orientation: configuration.orientation, before: {boolean}, current: isScrollable}}
-			 * @property onSet {function(scrollable){// Do something...}}
+			 * Parameter scrollable {{orientation: configuration.orientation, before: {boolean}, current: isScrollable}}.
+			 * @property {function} [onScrollable=null] Example: function(scrollable){// Do something...}
 			 */
 			onScrollable: null,
 
 			/**
 			 * Configure the callback that should to be called if the scrollbar will change the slider and therefore
-			 * the numberOfItems.start. The current numberOfItems object is the sole callback function parameter.
-			 * @param numberOfItems {configuration.numberOfItems}
-			 * @property onSet {function(numberOfItems){// Do something...}}
+			 * the numberOfItems.start. A copy of the current numberOfItems object is the sole callback function parameter.
+			 * @property {function} [onSet=null] Example: function(numberOfItems){// Do something...}
 			 */
 			onSet: null,
 
 			/**
 			 * Configure the scrollbar element, that must be a html5 container element (e.g. <div/>).
-			 * @property scrollbarElement {HTMLElement}
+			 * @property {HTMLElement} scrollbarElement
 			 */
 			scrollbarElement: null,
 
 			/**
 			 * Configure the minimal size of the slider by px.
-			 * @property sliderMinSize {number}
+			 * @property {number} [sliderMinSize=20]
 			 */
 			sliderMinSize: 20,
 
 			/**
 			 * Configure the wheel speed factor.
-			 * @property wheelSpeed {number}
+			 * @property {number} [wheelSpeed=2]
 			 */
 			wheelSpeed: 2
 		},
@@ -123,8 +122,8 @@ function PlainScrollbar(customConfiguration) {
 
 	/**
 	 * Set the slider and execute the onSet callback.
-	 * @param data {{source: string, type: string, value: number}}
-	 * @param preventCallbackExecution {boolean} True prevents the execution of the callback (default is false).
+	 * @param {{source: string, type: string, value: number}} data
+	 * @param {boolean} [preventCallbackExecution=false] True prevents the execution of the callback (default is false).
 	 */
 	function setScrollbar(data, preventCallbackExecution) {
 
@@ -178,7 +177,8 @@ function PlainScrollbar(customConfiguration) {
 		}
 
 		// Calculate isScrollable
-		isScrollable = (configuration.numberOfItems.total > configuration.numberOfItems.visible);
+		isScrollable = (configuration.numberOfItems.total > configuration.numberOfItems.visible)
+						&& (sliderAreaSize > configuration.sliderMinSize);
 
 		// Calculate configuration.numberOfItems.start
 		// Formula: start / value = (total - visible) / (sliderAreaSize - newSliderSize)
@@ -242,7 +242,7 @@ function PlainScrollbar(customConfiguration) {
 
 	/**
 	 * Calculate a data object by a (numberOfItems) start value that can be used for calling setScrollbar.
-	 * @param start
+	 * @param {string|number} start
 	 * @returns {{source: string, type: string, value: number}}
 	 */
 	function calculateDataFromStart(start) {
@@ -293,7 +293,7 @@ function PlainScrollbar(customConfiguration) {
 
 	/**
 	 * Calculate a data object by an event object that can be used for calling setScrollbar.
-	 * @param event
+	 * @param {object} event
 	 * @returns {{source: string, type: string, value: number}}
 	 */
 	function calculateDataFromEvent(event) {
@@ -339,7 +339,7 @@ function PlainScrollbar(customConfiguration) {
 
 	/**
 	 * Handle scrollbar mouseenter event if scrollbar is enabled.
-	 * @param event
+	 * @param {object} event
 	 */
 	function scrollbarMouseEnter(event) {
 		if (!isEnabled) {
@@ -352,7 +352,7 @@ function PlainScrollbar(customConfiguration) {
 
 	/**
 	 * Handle scrollbar mouseleave event if scrollbar is enabled.
-	 * @param event
+	 * @param {object} event
 	 */
 	function scrollbarMouseLeave(event) {
 		if (!isEnabled) {
@@ -369,7 +369,7 @@ function PlainScrollbar(customConfiguration) {
 
 	/**
 	 * Handle slider area mousedown event if scrollbar is enabled and it's not a slider drag operation.
-	 * @param event
+	 * @param {object} event
 	 */
 	function sliderAreaMouseDown(event) {
 		if (!isEnabled || isSliderDrag) {
@@ -408,7 +408,7 @@ function PlainScrollbar(customConfiguration) {
 
 	/**
 	 * Handle slider area mouseup event if it's a slider drag operation.
-	 * @param event
+	 * @param {object} event
 	 */
 	function sliderAreaMouseUp(event) {
 		if (!isSliderDrag) {
@@ -424,7 +424,7 @@ function PlainScrollbar(customConfiguration) {
 
 	/**
 	 * Handle slider area wheel event if scrollbar is enabled and if it's not a slider drag operation.
-	 * @param event
+	 * @param {object} event
 	 */
 	function sliderAreaWheel(event) {
 		if (!isEnabled || isSliderDrag) {
@@ -442,7 +442,7 @@ function PlainScrollbar(customConfiguration) {
 
 	/**
 	 * Handle slider mousedown event if scrollbar is enabled.
-	 * @param event
+	 * @param {object} event
 	 */
 	function sliderMouseDown(event) {
 		if (!isEnabled) {
@@ -464,7 +464,7 @@ function PlainScrollbar(customConfiguration) {
 
 	/**
 	 * Handle window mousemove event if scrollbar is enabled and it's a slider drag operation.
-	 * @param event
+	 * @param {object} event
 	 */
 	function windowMouseMove(event) {
 		if (!isEnabled || !isSliderDrag) {
@@ -479,7 +479,7 @@ function PlainScrollbar(customConfiguration) {
 
 	/**
 	 * Handle window mouseup event if it's a slider drag operation.
-	 * @param event
+	 * @param {object} event
 	 */
 	function windowMouseUp(event) {
 		if (!isSliderDrag) {
@@ -500,7 +500,7 @@ function PlainScrollbar(customConfiguration) {
 
 	/**
 	 * Handle arrow (backward) click event if scrollbar is enabled.
-	 * @param event
+	 * @param {object} event
 	 */
 	function arrowClickBackward(event) {
 		if (!isEnabled) {
@@ -514,7 +514,7 @@ function PlainScrollbar(customConfiguration) {
 
 	/**
 	 * Handle arrow (forward) click event if scrollbar is enabled.
-	 * @param event
+	 * @param {object} event
 	 */
 	function arrowClickForward(event) {
 		if (!isEnabled) {
@@ -530,7 +530,7 @@ function PlainScrollbar(customConfiguration) {
 
 	/**
 	 * Set the alwaysVisible state.
-	 * @param alwaysVisible {boolean} Will be evaluated as boolean.
+	 * @param {boolean} alwaysVisible Will be evaluated as boolean.
 	 */
 	this.alwaysVisible = function (alwaysVisible) {
 		configuration.alwaysVisible = Boolean(alwaysVisible);
@@ -539,7 +539,7 @@ function PlainScrollbar(customConfiguration) {
 
 	/**
 	 * Set the enabled state.
-	 * @param enabled {boolean} Will be evaluated as boolean.
+	 * @param {boolean} enabled Will be evaluated as boolean.
 	 */
 	this.enabled = function (enabled) {
 		isEnabled = Boolean(enabled);
@@ -564,8 +564,8 @@ function PlainScrollbar(customConfiguration) {
 
 	/**
 	 * Set the scrollbar. This includes adjusting the slider and executing the onSet callback (if not prevented).
-	 * @param mixed {object | string} An event or numberOfItems object or a string that is evaluated as start number.
-	 * @param preventCallbackExecution {boolean} True prevents the execution of the callback (default is false).
+	 * @param {object|string} mixed An event or numberOfItems object or a string that is evaluated as start number.
+	 * @param {boolean} [preventCallbackExecution=false] True prevents the execution of the callback.
 	 * @returns {boolean}
 	 */
 	this.set = function (mixed, preventCallbackExecution) {

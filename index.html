@@ -45,7 +45,7 @@
 	#thingWrapper {
 		position: relative;
 		overflow: hidden;
-		height: 55vh;
+		height: 43vh;
 		width: 80vw;
 		background-color: #ccc;
 		border: 1px solid #ccc;
@@ -149,10 +149,10 @@ PlainScrollbar instances can be horizontal or vertical.
 		<fieldset class="thing-wrapper">
 			<legend>Adjust the vertical scrollbar configuration</legend>
 			<div style="float: left; margin-right: 10px;">
-				<label><input id="verticalAlwaysVisibleInput" type="checkbox" value="true" checked> alwaysVisible</label>
+				<label><input id="verticalAlwaysVisibleInput" type="checkbox" value="true" checked>alwaysVisible</label>
 			</div>
 			<div style="float: left;">
-				<label><input id="verticalEnabledInput" type="checkbox" value="true" checked> enabled</label>
+				<label><input id="verticalEnabledInput" type="checkbox" value="true" checked>enabled</label>
 			</div>
 			<br style="clear: both;">
 			<div>
@@ -327,7 +327,10 @@ function changeNumberOfItems(total) {
 		var buffer = contentElement.innerHTML,
 			padLength = iMax.toString().length;
 		for (i = iStart; i < iMax; i++) {
-			buffer += '<span>' + (i + 1).toString().padStart(padLength) + ' &boxvr;' + String('&boxh;').repeat(Math.floor(Math.random() * Math.floor(123))) + '&boxvl;</span>';
+			buffer += '<span>'
+				+ (i + 1).toString().padStart(padLength)
+				+ ' &boxvr;' + String('&boxh;').repeat(Math.floor(Math.random() * Math.floor(123))) + '&boxvl;'
+				+ '</span>';
 		}
 		contentElement.innerHTML = buffer;
 	}
@@ -335,7 +338,6 @@ function changeNumberOfItems(total) {
 	if (delta < 0) {
 		for (i = (iStart -1); i > (iMax -1); i--) {
 			var child = items[i];
-			//child.remove(); //< Does not exist in IE 11
 			contentElement.removeChild(child);
 		}
 	}
